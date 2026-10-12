@@ -2,15 +2,25 @@ import { formatEuro } from "@/lib/money";
 import type { PublicSettings } from "./data";
 
 // Plain sentences built from the live settings. Every number on the site comes from here.
+// No server-only imports, so client islands can use the helpers too.
 
-const km = (value: number) => value.toLocaleString("nl-NL", { maximumFractionDigits: 1 });
+export const kmLabel = (value: number) => value.toLocaleString("nl-NL", { maximumFractionDigits: 1 });
+
+export type TravelRule = Pick<PublicSettings, "freeTravelKm" | "pricePerKmCents" | "travelDistanceMode">;
+
+// Same formula as create_booking in the database:
+// billable = max(0, km - free) * (2 for round trip), fee = round(billable * price per km).
+export function travelFeeCents(km: number, rule: TravelRule): number {
+  const multiplier = rule.travelDistanceMode === "round_trip" ? 2 : 1;
+  const billable = Math.max(0, km - rule.freeTravelKm) * multiplier;
+  return Math.round(billable * rule.pricePerKmCents);
+}
 
 export function travelSummary(settings: PublicSettings) {
   const roundTrip = settings.travelDistanceMode === "round_trip";
-  const multiplier = roundTrip ? 2 : 1;
   const perKm = formatEuro(settings.pricePerKmCents);
 
-  const freeKm = settings.freeTravelKm > 0 ? km(settings.freeTravelKm) : null;
+  const freeKm = settings.freeTravelKm > 0 ? kmLabel(settings.freeTravelKm) : null;
   const free =
     freeKm === null
       ? "Wij rekenen voorrijkosten vanaf de eerste kilometer."
@@ -24,8 +34,8 @@ export function travelSummary(settings: PublicSettings) {
   const extraKm = Math.min(10, settings.maxTravelKm - settings.freeTravelKm);
   const example =
     extraKm > 0
-      ? `Op ${km(settings.freeTravelKm + extraKm)} km afstand betaal je ${formatEuro(
-          Math.round(extraKm * multiplier * settings.pricePerKmCents),
+      ? `Op ${kmLabel(settings.freeTravelKm + extraKm)} km afstand betaal je ${formatEuro(
+          travelFeeCents(settings.freeTravelKm + extraKm, settings),
         )} voorrijkosten.`
       : null;
 
@@ -34,9 +44,10 @@ export function travelSummary(settings: PublicSettings) {
     free,
     over,
     example,
-    max: `Wij komen tot ${km(settings.maxTravelKm)} km afstand.`,
+    max: `Wij komen tot ${kmLabel(settings.maxTravelKm)} km afstand.`,
     perKm,
-    maxKm: km(settings.maxTravelKm),
+    maxKm: kmLabel(settings.maxTravelKm),
+    roundTrip,
   };
 }
 
@@ -58,6 +69,18 @@ export function refundText(settings: PublicSettings): string {
 
 export function durationLabel(min: number, max: number): string {
   return min === max ? `${min} min` : `${min} tot ${max} min`;
+}
+
+// "45 minuten", "1 uur", "1 uur en 15 minuten"
+export function minutesLabel(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+
+  if (hours === 0) {
+    return `${rest} minuten`;
+  }
+
+  return rest === 0 ? `${hours} uur` : `${hours} uur en ${rest} minuten`;
 }
 
 export function phoneHref(phone: string): string {

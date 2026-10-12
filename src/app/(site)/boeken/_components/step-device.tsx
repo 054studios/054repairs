@@ -32,7 +32,7 @@ export function StepDevice({
 
   return (
     <>
-      <StepHeading title="Welk toestel repareren we?" text="Kies het model van je telefoon. Daarna zie je direct de prijzen." />
+      <StepHeading title="Welk toestel repareren wij?" text="Kies het model van je telefoon. Daarna zie je direct de prijzen." />
 
       <div className={stepPanelClass}>
         {models.length === 0 ? (
@@ -128,7 +128,7 @@ export function StepDevice({
                         className="peer sr-only"
                       />
                       <span
-                        className={`${optionClass} flex h-full min-h-[5.5rem] flex-col justify-between gap-3 p-3.5`}
+                        className={`${optionClass} flex h-full min-h-[5.5rem] flex-col justify-between gap-3`}
                       >
                         <DeviceMobileIcon
                           size={20}

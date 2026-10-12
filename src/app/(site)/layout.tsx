@@ -9,7 +9,7 @@ export const instant = false;
 // The title template only applies to public pages, so admin titles keep their own suffix.
 export const metadata: Metadata = {
   title: {
-    default: "054repairs | Telefoonreparatie aan huis",
+    default: "054repairs | iPhone-reparatie aan huis",
     template: "%s | 054repairs",
   },
 };
@@ -18,10 +18,10 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   const settings = await getPublicSettings();
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex min-h-dvh flex-col bg-ink-950">
       <a
         href="#inhoud"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-navy-950 focus:px-4 focus:py-2 focus:text-white"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-50 focus:rounded-ui focus:bg-cyan-400 focus:px-4 focus:py-2.5 focus:font-semibold focus:text-cyan-ink"
       >
         Direct naar de inhoud
       </a>

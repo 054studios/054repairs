@@ -1,20 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { SignOutIcon } from "@phosphor-icons/react/dist/ssr";
+import { AdminRailNav, AdminStripNav } from "@/components/admin/admin-nav";
+import { SubmitButton } from "@/components/admin/submit-button";
+import { buttonClass, panelClass } from "@/components/ui/styles";
+import { Wordmark } from "@/components/ui/wordmark";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "../actions";
 
 // Admin pages depend on the signed-in user, so they render per request.
 export const instant = false;
-
-const navItems = [
-  { href: "/admin", label: "Overzicht" },
-  { href: "/admin/afspraken", label: "Afspraken" },
-  { href: "/admin/catalogus", label: "Catalogus" },
-  { href: "/admin/voorrijkosten", label: "Voorrijkosten" },
-  { href: "/admin/planning", label: "Planning" },
-  { href: "/admin/betalingen", label: "Betalingen" },
-  { href: "/admin/instellingen", label: "Instellingen" },
-];
 
 export default async function AdminDashboardLayout({
   children,
@@ -35,44 +30,87 @@ export default async function AdminDashboardLayout({
 
   if (!isAdmin) {
     return (
-      <main className="flex min-h-dvh items-center justify-center bg-navy-50 px-4">
-        <div className="max-w-sm rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-navy-100">
-          <h1 className="text-xl font-semibold text-navy-950">Geen toegang</h1>
-          <p className="mt-2 text-sm text-navy-600">Dit account heeft geen admin-rechten.</p>
-          <form action={signOut} className="mt-6">
-            <button type="submit" className="text-sm font-medium text-navy-800 underline">
-              Uitloggen
-            </button>
-          </form>
+      <main className="night-sky flex min-h-dvh items-center justify-center px-4 py-12">
+        <div className={`${panelClass} w-full max-w-sm p-6 sm:p-8`}>
+          <span className="text-steel-300">
+            <Wordmark />
+          </span>
+          <h1 className="mt-8 font-display text-2xl font-semibold tracking-[-0.025em] text-steel-50">Geen toegang</h1>
+          <p className="mt-2 leading-relaxed text-steel-400">
+            Dit account heeft geen beheerrechten. Log uit en log in met het beheerdersaccount.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <form action={signOut}>
+              <SubmitButton
+                className={buttonClass("secondary")}
+                icon={<SignOutIcon aria-hidden="true" className="size-5" />}
+              >
+                Uitloggen
+              </SubmitButton>
+            </form>
+            <Link href="/" className={buttonClass("ghost")}>
+              Naar de website
+            </Link>
+          </div>
         </div>
       </main>
     );
   }
 
   return (
-    <div className="min-h-dvh bg-navy-50 md:grid md:grid-cols-[14rem_1fr]">
-      <aside className="border-b border-navy-100 bg-white md:border-b-0 md:border-r">
-        <div className="flex items-center justify-between px-4 py-4 md:block md:px-6">
-          <span className="font-semibold tracking-tight text-navy-950">054repairs admin</span>
-          <form action={signOut} className="md:mt-4">
-            <button type="submit" className="text-sm text-navy-600 hover:text-navy-950">
+    <div className="min-h-dvh bg-ink-950 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]">
+      <a
+        href="#inhoud"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-50 focus:rounded-ui focus:bg-cyan-400 focus:px-4 focus:py-2.5 focus:font-semibold focus:text-cyan-ink"
+      >
+        Direct naar de inhoud
+      </a>
+
+      {/* Desktop: the rail. Sticky and solid, so scrolling the page never repaints it. */}
+      <aside className="hidden border-r border-line bg-ink-900 lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col">
+        <div className="px-5 pb-6 pt-5">
+          <Link href="/admin" className="-ml-1 inline-flex min-h-11 items-center rounded-ui px-1 text-steel-300">
+            <Wordmark />
+          </Link>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-3">
+          <AdminRailNav />
+        </div>
+        <div className="border-t border-line p-3">
+          <form action={signOut}>
+            <SubmitButton
+              className="flex h-11 w-full items-center gap-3 rounded-ui px-3 text-[0.95rem] font-medium text-steel-400 transition-colors duration-150 hover:bg-ink-850 hover:text-steel-100 disabled:opacity-60"
+              icon={<SignOutIcon aria-hidden="true" className="size-5 shrink-0" />}
+            >
               Uitloggen
-            </button>
+            </SubmitButton>
           </form>
         </div>
-        <nav className="flex gap-1 overflow-x-auto px-4 pb-3 md:flex-col md:px-3 md:pb-0">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-navy-700 transition hover:bg-navy-50 hover:text-navy-950"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
       </aside>
-      <div className="p-4 md:p-8">{children}</div>
+
+      <div className="min-w-0">
+        {/* Mobile: the top bar scrolls away, the nav strip stays. */}
+        <header className="flex h-14 items-center justify-between gap-3 px-4 lg:hidden">
+          <Link href="/admin" className="-ml-1 inline-flex min-h-11 items-center rounded-ui px-1 text-steel-300">
+            <Wordmark />
+          </Link>
+          <form action={signOut} className="-mr-3">
+            <SubmitButton
+              className={buttonClass("ghost")}
+              icon={<SignOutIcon aria-hidden="true" className="size-5" />}
+            >
+              Uitloggen
+            </SubmitButton>
+          </form>
+        </header>
+        <div className="sticky top-0 z-30 border-y border-line bg-ink-950 lg:hidden">
+          <AdminStripNav />
+        </div>
+
+        <main id="inhoud" className="mx-auto w-full max-w-[72rem] px-4 pb-20 pt-6 sm:px-6 lg:px-10 lg:pb-16 lg:pt-10">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

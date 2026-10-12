@@ -1,5 +1,8 @@
 import { ActionForm } from "@/components/admin/action-form";
-import { Card, Field, inputClass } from "@/components/admin/fields";
+import { Card, CardSection, Field, inputClass } from "@/components/admin/fields";
+import { Notice } from "@/components/admin/notice";
+import { PageHeader } from "@/components/admin/page-header";
+import { chipClass } from "@/components/ui/styles";
 import { requireAdmin } from "@/lib/auth";
 import { createAdminClient, serverSecretsConfigured } from "@/lib/supabase/admin";
 import { saveBusinessSettings, saveMollieKey, testMollieKey } from "./actions";
@@ -8,6 +11,8 @@ export const metadata = {
   title: "Instellingen | 054repairs admin",
   robots: { index: false, follow: false },
 };
+
+const codeClass = "rounded-[6px] bg-ink-800 px-1.5 py-0.5 font-mono text-[0.8125rem] text-steel-50";
 
 export default async function SettingsPage() {
   const { supabase } = await requireAdmin();
@@ -31,74 +36,96 @@ export default async function SettingsPage() {
   }
 
   if (!settings) {
-    return <p className="text-navy-600">Instellingen konden niet worden geladen.</p>;
+    return (
+      <div>
+        <PageHeader title="Instellingen" />
+        <Notice tone="bad" role="alert">
+          Instellingen konden niet worden geladen. Ververs de pagina om het opnieuw te proberen.
+        </Notice>
+      </div>
+    );
   }
 
+  const live = settings.mollie_mode === "live";
+
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight text-navy-950">Instellingen</h1>
-        <p className="mt-1 text-sm text-navy-600">Bedrijfsgegevens en de betaalkoppeling.</p>
-      </header>
+    <div>
+      <PageHeader title="Instellingen" description="Bedrijfsgegevens en de betaalkoppeling." />
 
-      <Card title="Bedrijfsgegevens" description="Deze gegevens staan op de website en in e-mails aan klanten.">
-        <ActionForm action={saveBusinessSettings}>
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Bedrijfsnaam">
-              <input name="business_name" defaultValue={settings.business_name} required className={inputClass} />
-            </Field>
-            <Field label="Telefoonnummer">
-              <input name="phone" type="tel" defaultValue={settings.phone ?? ""} className={inputClass} />
-            </Field>
-            <Field label="E-mailadres">
-              <input name="email" type="email" defaultValue={settings.email ?? ""} className={inputClass} />
-            </Field>
-          </div>
-        </ActionForm>
-      </Card>
+      <div className="grid max-w-3xl gap-4 lg:gap-6">
+        <Card title="Bedrijfsgegevens" description="Deze gegevens staan op de website en in e-mails aan klanten.">
+          <ActionForm action={saveBusinessSettings}>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Bedrijfsnaam" className="sm:col-span-2">
+                <input name="business_name" defaultValue={settings.business_name} required className={inputClass} />
+              </Field>
+              <Field label="Telefoonnummer">
+                <input name="phone" type="tel" defaultValue={settings.phone ?? ""} className={`${inputClass} figures`} />
+              </Field>
+              <Field label="E-mailadres">
+                <input name="email" type="email" defaultValue={settings.email ?? ""} className={inputClass} />
+              </Field>
+            </div>
+          </ActionForm>
+        </Card>
 
-      <Card
-        title="Mollie"
-        description="Je API-key voor betalingen. De key wordt versleuteld opgeslagen en daarna nooit meer getoond."
-      >
-        {!secretsReady && (
-          <div role="alert" className="mb-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
-            Het opslaan van de key kan pas als de serverinstellingen zijn ingevuld:{" "}
-            <code>SUPABASE_SERVICE_ROLE_KEY</code> en <code>APP_ENCRYPTION_KEY</code>. Zie de README.
-          </div>
-        )}
-
-        <div className="mb-5 flex flex-wrap items-center gap-3 text-sm">
-          <span className="text-navy-600">Huidige key:</span>
-          {keyHint ? (
-            <span className="font-medium text-navy-950">
-              ••••{keyHint} ({settings.mollie_mode === "live" ? "live" : "test"}-modus)
-            </span>
-          ) : (
-            <span className="font-medium text-navy-950">Nog niet ingesteld</span>
+        <Card
+          title="Mollie"
+          description="Je API-key voor betalingen. De key wordt versleuteld opgeslagen en daarna nooit meer getoond."
+          aside={
+            keyHint ? (
+              <span className={chipClass("ok")}>{live ? "Ingesteld, live" : "Ingesteld, test"}</span>
+            ) : (
+              <span className={chipClass("neutral")}>Niet ingesteld</span>
+            )
+          }
+        >
+          {!secretsReady && (
+            <Notice tone="warn" role="alert" title="Serverinstellingen ontbreken" className="mb-5">
+              Het opslaan van de key kan pas als <code className={codeClass}>SUPABASE_SERVICE_ROLE_KEY</code> en{" "}
+              <code className={codeClass}>APP_ENCRYPTION_KEY</code> zijn ingevuld. Zie de README.
+            </Notice>
           )}
-        </div>
 
-        <ActionForm action={saveMollieKey} submitLabel="Key opslaan">
-          <Field label="Nieuwe API-key" hint="Begint met test_ (oefenen) of live_ (echte betalingen). Laat leeg om de huidige key te houden.">
-            <input
-              name="mollie_api_key"
-              type="password"
-              autoComplete="off"
-              spellCheck={false}
-              disabled={!secretsReady}
-              placeholder="test_…"
-              className={inputClass}
-            />
-          </Field>
-        </ActionForm>
+          <dl className="mb-5 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
+            <dt className="text-steel-400">Huidige key</dt>
+            <dd className="font-medium text-steel-50">
+              {keyHint ? (
+                <>
+                  Eindigt op <span className="font-mono">{keyHint}</span>,{" "}
+                  {live ? "live-modus (echte betalingen)" : "testmodus"}
+                </>
+              ) : (
+                "Nog niet ingesteld"
+              )}
+            </dd>
+          </dl>
 
-        {keyHint && (
-          <div className="mt-6 border-t border-navy-100 pt-6">
-            <ActionForm action={testMollieKey} submitLabel="Verbinding testen" />
-          </div>
-        )}
-      </Card>
+          <ActionForm action={saveMollieKey} submitLabel="Key opslaan" variant="secondary">
+            <Field
+              label="Nieuwe API-key"
+              hint="Begint met test_ (oefenen) of live_ (echte betalingen). Laat leeg om de huidige key te houden."
+            >
+              <input
+                name="mollie_api_key"
+                type="password"
+                autoComplete="off"
+                spellCheck={false}
+                disabled={!secretsReady}
+                placeholder="test_"
+                className={`${inputClass} font-mono`}
+              />
+            </Field>
+          </ActionForm>
+
+          {keyHint && (
+            <CardSection title="Verbinding">
+              <p className="mb-4 text-sm text-steel-400">Controleer of Mollie de opgeslagen key accepteert.</p>
+              <ActionForm action={testMollieKey} submitLabel="Verbinding testen" variant="secondary" />
+            </CardSection>
+          )}
+        </Card>
+      </div>
     </div>
   );
 }

@@ -98,7 +98,7 @@ export function StepTime({
   return (
     <>
       <StepHeading
-        title="Wanneer komen we langs?"
+        title="Wanneer komen wij langs?"
         text="Kies een dag en daarna een begintijd. Alle tijden zijn Nederlandse tijd."
       />
 

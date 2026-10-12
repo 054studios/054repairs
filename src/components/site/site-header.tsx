@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { buttonClass } from "./button";
-import { MobileMenu } from "./mobile-menu";
+import { Wordmark } from "@/components/ui/wordmark";
+import { HeaderNav } from "./header-nav";
 
 export const siteLinks = [
   { href: "/prijzen", label: "Prijzen" },
@@ -9,31 +9,15 @@ export const siteLinks = [
   { href: "/contact", label: "Contact" },
 ];
 
+// Sticky and solid (no blur), so scrolling stays cheap on older phones.
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-navy-100 bg-navy-50/90 backdrop-blur-md">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center px-4 md:px-6 lg:px-8">
-        <Link href="/" className="rounded-lg text-lg font-extrabold tracking-[-0.02em] text-navy-950">
-          054repairs
+    <header className="sticky top-0 z-40 border-b border-line bg-ink-950/[0.94]">
+      <div className="mx-auto flex h-16 w-full max-w-[76rem] items-center px-4 sm:px-6 lg:px-8">
+        <Link href="/" className="-ml-1 inline-flex min-h-11 items-center rounded-ui px-1 text-steel-300">
+          <Wordmark />
         </Link>
-
-        <nav aria-label="Hoofdmenu" className="ml-auto hidden items-center gap-7 lg:flex">
-          {siteLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-[15px] font-medium text-navy-800 transition-colors duration-150 hover:text-navy-950"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-
-        <Link href="/boeken" className={`${buttonClass("primary", "sm")} ml-auto lg:ml-8`}>
-          Boek nu
-        </Link>
-
-        <MobileMenu links={siteLinks} />
+        <HeaderNav links={siteLinks} />
       </div>
     </header>
   );

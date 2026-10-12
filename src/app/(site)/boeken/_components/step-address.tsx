@@ -27,6 +27,7 @@ export function StepAddress({
   address,
   travel,
   busy,
+  travelFailed,
   onPick,
   onRetry,
   onReset,
@@ -34,6 +35,7 @@ export function StepAddress({
   address: AddressSuggestion | null;
   travel: TravelQuote | null;
   busy: boolean;
+  travelFailed: boolean;
   onPick: (suggestion: AddressSuggestion) => void;
   onRetry: () => void;
   onReset: () => void;
@@ -152,7 +154,7 @@ export function StepAddress({
   return (
     <>
       <StepHeading
-        title="Waar komen we naartoe?"
+        title="Waar komen wij naartoe?"
         text="Zoek je adres op postcode en huisnummer. Daarna zie je direct de voorrijkosten."
       />
 
@@ -181,7 +183,7 @@ export function StepAddress({
                 {formatPostcode(address.postcode)} {address.city}
               </p>
             </div>
-            <button type="button" onClick={handleReset} className={`${buttonClass("ghost", "sm")} -my-1 -mr-2 shrink-0`}>
+            <button type="button" onClick={handleReset} className={`${buttonClass("ghost", "md")} -my-1.5 -mr-3 shrink-0`}>
               Ander adres
             </button>
           </section>
@@ -261,7 +263,7 @@ export function StepAddress({
                 <div className="mt-3 space-y-1.5" aria-busy="true">
                   <span className="sr-only">Adressen zoeken</span>
                   <div className={`${skeletonClass} h-12`} />
-                  <div className={`${skeletonClass} h-12 opacity-70`} />
+                  <div className={`${skeletonClass} h-12`} />
                 </div>
               )}
               {noMatch && (
@@ -297,7 +299,7 @@ export function StepAddress({
           </div>
         )}
 
-        {address && !busy && !travel && (
+        {address && travelFailed && !busy && !travel && (
           <div className={`${insetClass} mt-4 p-4`}>
             <p className="text-[0.9375rem] text-steel-300">
               De voorrijkosten voor dit adres zijn nog niet berekend. Zonder voorrijkosten kun je niet verder.

@@ -1,6 +1,9 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { ArrowSquareOutIcon, CheckIcon, CircleNotchIcon, CopyIcon, LinkSimpleIcon } from "@phosphor-icons/react";
+import { StatusMessage } from "@/components/admin/status-message";
+import { buttonClass, insetClass } from "@/components/ui/styles";
 import type { MollieLinkResult } from "../shared";
 
 type LinkAction = (prev: MollieLinkResult | null, formData: FormData) => Promise<MollieLinkResult>;
@@ -8,52 +11,47 @@ type LinkAction = (prev: MollieLinkResult | null, formData: FormData) => Promise
 // Creates a Mollie link for the open amount and shows it, so the admin can copy it for the customer.
 export function MollieLinkForm({ action }: { action: LinkAction }) {
   const [state, formAction, pending] = useActionState(action, null);
-  const [copied, setCopied] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
   async function copy(url: string) {
     try {
       await navigator.clipboard.writeText(url);
-      setCopied(true);
+      setCopiedUrl(url);
     } catch {
-      setCopied(false);
+      setCopiedUrl(null);
     }
   }
 
   const checkoutUrl = state?.checkoutUrl;
+  const copied = checkoutUrl !== undefined && copiedUrl === checkoutUrl;
 
   return (
     <form action={formAction} className="space-y-3">
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-lg bg-navy-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-navy-800 disabled:opacity-60"
-      >
-        {pending ? "Bezig…" : "Maak betaallink voor restbedrag"}
+      <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass("secondary")}>
+        {pending ? (
+          <CircleNotchIcon aria-hidden="true" className="size-4 animate-spin" />
+        ) : (
+          <LinkSimpleIcon aria-hidden="true" className="size-5" />
+        )}
+        Maak betaallink
       </button>
 
-      {state && (
-        <p role="status" className={state.ok ? "text-sm text-emerald-700" : "text-sm text-red-700"}>
-          {state.message}
-        </p>
-      )}
+      <StatusMessage state={state} />
 
       {checkoutUrl && (
-        <div className="rounded-xl bg-navy-50 p-3">
-          <p className="break-all text-sm text-navy-800">{checkoutUrl}</p>
-          <div className="mt-2 flex flex-wrap items-center gap-4 text-sm">
-            <button
-              type="button"
-              onClick={() => copy(checkoutUrl)}
-              className="font-medium text-navy-900 underline underline-offset-4"
-            >
+        <div className={`${insetClass} p-3`}>
+          <p className="break-all text-sm text-steel-300">{checkoutUrl}</p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <button type="button" onClick={() => copy(checkoutUrl)} className={buttonClass("ghost", "md")}>
+              {copied ? (
+                <CheckIcon aria-hidden="true" className="size-5 text-ok" />
+              ) : (
+                <CopyIcon aria-hidden="true" className="size-5" />
+              )}
               {copied ? "Gekopieerd" : "Kopieer link"}
             </button>
-            <a
-              href={checkoutUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-navy-900 underline underline-offset-4"
-            >
+            <a href={checkoutUrl} target="_blank" rel="noopener noreferrer" className={buttonClass("ghost", "md")}>
+              <ArrowSquareOutIcon aria-hidden="true" className="size-5" />
               Open betaalpagina
             </a>
           </div>

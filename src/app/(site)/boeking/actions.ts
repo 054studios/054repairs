@@ -47,7 +47,7 @@ export async function cancelBookingAction(reference: string, token: string): Pro
       ok: true,
       message:
         paidCents > 0
-          ? "Je afspraak is geannuleerd. Omdat je al hebt betaald, nemen we contact met je op over de terugbetaling."
+          ? "Je afspraak is geannuleerd. Omdat je al hebt betaald, nemen wij contact met je op over de terugbetaling."
           : "Je afspraak is geannuleerd.",
     };
   });

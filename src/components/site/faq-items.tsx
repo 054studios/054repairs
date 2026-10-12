@@ -1,85 +1,103 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { textLinkClass } from "./button";
-import { depositPhrase, durationLabel, refundText, travelSummary } from "./facts";
+import { textLinkClass } from "@/components/ui/styles";
+import { depositPhrase, minutesLabel, refundText, travelSummary } from "./facts";
 import { durationRange, type Catalogue, type PublicSettings } from "./data";
 
-export type FaqItem = { id: string; question: string; answer: ReactNode };
+export type FaqGroup = "boeken" | "reparatie";
+export type FaqItem = { id: string; group: FaqGroup; question: string; answer: ReactNode };
 
-// Answers that depend on prices or rules use the live values. Without them, a generic answer is shown.
+export const faqGroups: { id: FaqGroup; title: string }[] = [
+  { id: "reparatie", title: "De reparatie" },
+  { id: "boeken", title: "Boeken en betalen" },
+];
+
+// Answers that depend on prices or rules use the live values. Without them, a general answer is shown.
+// No warranty answer: the owner has not set a warranty term yet.
 export function buildFaq(settings: PublicSettings | null, catalogue: Catalogue | null): FaqItem[] {
   const travel = settings ? travelSummary(settings) : null;
   const range = catalogue ? durationRange(catalogue) : null;
 
   return [
     {
-      id: "ophalen",
-      question: "Hoe werkt het ophalen?",
+      id: "werkwijze",
+      group: "reparatie",
+      question: "Waar vindt de reparatie plaats?",
       answer:
-        "Je boekt een tijdstip en vult je adres in. Op het afgesproken moment halen we je toestel op bij dat adres. Uiterlijk op het eindtijdstip van je boeking brengen we het terug.",
-    },
-    {
-      id: "voorrijkosten",
-      question: "Wat kosten de voorrijkosten?",
-      answer: travel
-        ? [travel.free, travel.over, travel.example, travel.max, "Het bedrag voor jouw adres zie je voordat je boekt."]
-            .filter(Boolean)
-            .join(" ")
-        : "De voorrijkosten hangen af van de afstand tot je adres. Je ziet het bedrag voordat je boekt.",
-    },
-    {
-      id: "betaling",
-      question: "Welke betaalmethoden zijn er?",
-      answer: settings ? (
-        <>
-          Je betaalt {depositPhrase(settings)} vooraf online. Dat legt je tijdstip vast. Het restant betaal je bij
-          terugbrengen met pin of contant.
-          {settings.allowFullPrepay ? " Je kunt ook meteen het volledige bedrag online betalen." : null}
-        </>
-      ) : (
-        "Je betaalt een aanbetaling online om je tijdstip vast te leggen. Het restant betaal je bij terugbrengen met pin of contant."
-      ),
-    },
-    {
-      id: "annuleren",
-      question: "Kan ik annuleren?",
-      answer: (
-        <>
-          Ja, tot het moment dat je afspraak begint.{" "}
-          {settings ? `${refundText(settings)} ` : "De terugbetaling hangt af van het moment van annuleren. "}
-          Lees de <Link href="/voorwaarden" className={textLinkClass}>voorwaarden</Link> voor alle details.
-        </>
-      ),
+        "Bij jou in de buurt. Wij rijden naar het adres dat je opgeeft en repareren je iPhone ter plekke in onze bus. Zodra de reparatie klaar is, krijg je je toestel terug.",
     },
     {
       id: "duur",
+      group: "reparatie",
       question: "Hoe lang duurt een reparatie?",
       answer: range
         ? `${
             range.min === range.max
-              ? `De reparatie duurt ${durationLabel(range.min, range.max)}.`
-              : `De duur van een reparatie ligt tussen ${range.min} en ${range.max} minuten.`
-          } Je toestel is uiterlijk op het eindtijdstip van je boeking weer bij je.`
-        : "De duur van je reparatie staat in je boeking. Je toestel is uiterlijk op het eindtijdstip weer bij je.",
+              ? `Een reparatie duurt ${minutesLabel(range.min)}.`
+              : `Dat hangt af van de reparatie: van ${range.min} tot ${range.max} minuten.`
+          } Bij de prijs zie je precies hoe lang jouw reparatie duurt. Zo lang duurt ook je afspraak.`
+        : "Dat hangt af van de reparatie. Bij de prijs zie je hoe lang jouw reparatie duurt. Zo lang duurt ook je afspraak.",
     },
     {
-      id: "garantie",
-      question: "Welke garantie krijg ik?",
-      answer: (
-        <>
-          Op de uitgevoerde reparatie geven wij garantie. De garantietermijn en de voorwaarden staan in de{" "}
-          <Link href="/voorwaarden" className={textLinkClass}>
-            algemene voorwaarden
-          </Link>
-          .
-        </>
-      ),
+      id: "aanwezig",
+      group: "reparatie",
+      question: "Moet ik erbij zijn?",
+      answer:
+        "Je bent op het afgesproken tijdstip op je adres. Daar geef je je iPhone aan ons, en daar krijg je hem terug zodra de reparatie klaar is.",
+    },
+    {
+      id: "onderdeel",
+      group: "reparatie",
+      question: "Wat als een onderdeel niet beschikbaar is?",
+      answer:
+        "Dan nemen we contact met je op voordat we naar je toe rijden, en overleggen we hoe we verder gaan, bijvoorbeeld met een nieuw tijdstip.",
     },
     {
       id: "backup",
+      group: "reparatie",
       question: "Moet ik een back-up maken?",
       answer:
-        "Ja, maak vooraf een back-up van je toestel. Bij een reparatie kunnen gegevens verloren gaan, ook als we zorgvuldig werken.",
+        "Ja, maak vooraf een back-up van je iPhone. Bij een reparatie kunnen gegevens verloren gaan, ook als we zorgvuldig werken.",
+    },
+    {
+      id: "voorrijkosten",
+      group: "boeken",
+      question: "Wat kosten de voorrijkosten?",
+      answer: travel
+        ? [travel.free, travel.over, travel.example, travel.max, "Het bedrag voor jouw adres zie je voordat je betaalt."]
+            .filter(Boolean)
+            .join(" ")
+        : "De voorrijkosten hangen af van de afstand tot je adres. Je ziet het bedrag voordat je betaalt.",
+    },
+    {
+      id: "betaling",
+      group: "boeken",
+      question: "Hoe betaal ik?",
+      answer: settings ? (
+        <>
+          Bij het boeken betaal je {depositPhrase(settings)} online. Daarmee ligt je tijdstip vast. Het restbedrag
+          betaal je met pin of contant als je je iPhone terugkrijgt.
+          {settings.allowFullPrepay ? " Je kunt ook meteen het hele bedrag online betalen." : null}
+        </>
+      ) : (
+        "Bij het boeken betaal je een aanbetaling online. Daarmee ligt je tijdstip vast. Het restbedrag betaal je met pin of contant als je je iPhone terugkrijgt."
+      ),
+    },
+    {
+      id: "annuleren",
+      group: "boeken",
+      question: "Kan ik annuleren?",
+      answer: (
+        <>
+          Ja, tot het moment dat je afspraak begint.{" "}
+          {settings ? `${refundText(settings)} ` : "Hoeveel je terugkrijgt, hangt af van het moment van annuleren. "}
+          Lees de{" "}
+          <Link href="/voorwaarden" className={textLinkClass}>
+            voorwaarden
+          </Link>{" "}
+          voor alle details.
+        </>
+      ),
     },
   ];
 }

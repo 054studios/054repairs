@@ -139,6 +139,7 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
   });
   const [error, setError] = useState<string | null>(null);
   const [customerErrors, setCustomerErrors] = useState<Partial<Record<CustomerField, string>>>({});
+  const [travelFailed, setTravelFailed] = useState(false);
   // Navigation (Volgende, booking) and background data (travel fee, times) load separately,
   // so the main button only shows a busy label for its own work.
   const [navPending, startNav] = useTransition();
@@ -240,6 +241,7 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
 
   function pickAddress(address: AddressSuggestion) {
     setError(null);
+    setTravelFailed(false);
     update({ address, travel: null });
 
     startData(async () => {
@@ -247,6 +249,7 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
 
       if (!result.ok) {
         setError(result.message);
+        setTravelFailed(true);
         return;
       }
 
@@ -257,6 +260,7 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
 
   function resetAddress() {
     setError(null);
+    setTravelFailed(false);
     update({ address: null, travel: null });
   }
 
@@ -498,6 +502,7 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
             address={state.address}
             travel={state.travel}
             busy={dataPending}
+            travelFailed={travelFailed}
             onPick={pickAddress}
             onRetry={() => state.address && pickAddress(state.address)}
             onReset={resetAddress}
@@ -649,9 +654,13 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
                     {formatEuro(summary.cents)}
                   </p>
                 </div>
+              ) : step === 0 && modelName ? (
+                <div className="min-w-0">
+                  <p className="text-xs text-steel-400 sm:text-sm">Toestel</p>
+                  <p className="truncate font-semibold text-steel-50">{modelName}</p>
+                </div>
               ) : (
-                !canContinue &&
-                missing && <p className="truncate text-sm text-steel-400">{missing}</p>
+                !canContinue && missing && <p className="truncate text-sm text-steel-400">{missing}</p>
               )}
             </div>
 

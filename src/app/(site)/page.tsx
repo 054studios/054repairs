@@ -1,313 +1,306 @@
 import Link from "next/link";
-import { buttonClass, textLinkClass } from "@/components/site/button";
-import { getCatalogue, getPublicSettings, summarizeRepairs, type PublicSettings } from "@/components/site/data";
-import { depositPhrase, phoneHref, travelSummary } from "@/components/site/facts";
-import { buildFaq } from "@/components/site/faq-items";
+import type { CSSProperties } from "react";
+import { getCatalogue, getPublicSettings, type PublicSettings } from "@/components/site/data";
+import {
+  durationRangeOf,
+  fromPriceTable,
+  pricedCatalogue,
+  type FromPriceTable,
+  type PricedCatalogue,
+} from "@/components/site/catalogue";
+import { depositPhrase, refundText, travelSummary } from "@/components/site/facts";
+import { buildFaq, type FaqItem } from "@/components/site/faq-items";
 import { FaqList } from "@/components/site/faq-list";
-import { Container, Notice } from "@/components/site/ui";
+import { PriceCheck } from "@/components/site/price-check";
+import { ServiceRoute, type ServiceStop } from "@/components/site/service-route";
+import { TravelFee } from "@/components/site/travel-fee";
+import { ClosingCta, Container, Notice } from "@/components/site/ui";
+import { displayClass, h2Class, h3Class, leadClass, textLinkClass } from "@/components/ui/styles";
 import { formatEuro } from "@/lib/money";
-
-const steps = [
-  {
-    title: "Boek online",
-    text: "Kies je toestel, de reparatie en een moment dat je uitkomt.",
-  },
-  {
-    title: "Wij halen het op",
-    text: "Op het afgesproken moment halen we je toestel bij je op.",
-  },
-  {
-    title: "Wij repareren",
-    text: "We repareren je toestel. De duur staat in je boeking.",
-  },
-  {
-    title: "Terug bij jou",
-    text: "Uiterlijk op het eindtijdstip van je boeking brengen we je toestel terug.",
-  },
-];
 
 // Prices and settings are read from the database on each request.
 export const instant = false;
 
+const HOME_FAQ = ["werkwijze", "duur", "onderdeel", "backup"];
+
+const stagger = (index: number) => ({ "--i": index }) as CSSProperties;
+
 export default async function HomePage() {
   const [settings, catalogue] = await Promise.all([getPublicSettings(), getCatalogue()]);
-  const repairs = catalogue ? summarizeRepairs(catalogue) : null;
-  const faq = buildFaq(settings, catalogue).filter((item) =>
-    ["voorrijkosten", "betaling", "annuleren"].includes(item.id),
-  );
+  const priced = catalogue ? pricedCatalogue(catalogue) : null;
+  const allFaq = buildFaq(settings, catalogue);
+  const faq = HOME_FAQ.flatMap((id) => allFaq.filter((item) => item.id === id));
 
   return (
     <>
-      <Hero settings={settings} />
-      <Steps />
-      <PriceTeaser repairs={repairs} />
-      <Trust settings={settings} />
-      <FaqTeaser items={faq} />
-      <ClosingCta settings={settings} />
+      <Hero priced={priced} settings={settings} />
+      <RouteSection priced={priced} settings={settings} />
+      <TravelSection settings={settings} />
+      <PricePreview table={priced ? fromPriceTable(priced) : null} />
+      <PaymentSection settings={settings} />
+      <FaqSection items={faq} />
+      <ClosingCta title="Jij kiest het moment. Wij rijden naar je toe." />
     </>
   );
 }
 
-function Hero({ settings }: { settings: PublicSettings | null }) {
+function Hero({ priced, settings }: { priced: PricedCatalogue | null; settings: PublicSettings | null }) {
   return (
-    <section aria-labelledby="hero-titel" className="pb-20 pt-12 md:pb-28 md:pt-20">
-      <Container className="grid items-end gap-14 lg:grid-cols-[1.3fr_0.7fr] lg:gap-16">
+    <section aria-labelledby="hero-titel" className="night-sky">
+      <Container className="grid gap-7 pb-16 pt-7 sm:pt-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:items-center lg:gap-14 lg:pb-28 lg:pt-20">
         <div>
           <h1
             id="hero-titel"
-            className="rise text-[2.6rem] font-extrabold leading-[1.02] tracking-[-0.03em] text-navy-950 sm:text-6xl lg:text-[3.5rem]"
+            className={`settle ${displayClass} max-w-[14ch] text-[clamp(2.5rem,6.2vw,5rem)] leading-[0.98] tracking-[-0.035em]`}
+            style={stagger(0)}
           >
-            Je telefoon repareren, zonder de deur uit.
+            <span className="whitespace-nowrap">iPhone-reparatie</span> voor de deur.
           </h1>
-          <p className="rise rise-2 mt-6 max-w-[34ch] text-lg leading-relaxed text-navy-800 md:text-xl">
-            Wij halen je toestel op, repareren het en brengen het terug. Betaal een aanbetaling of alles in één keer.
+          <p
+            className="settle mt-4 max-w-[38ch] text-[1.0625rem] leading-relaxed text-steel-300 sm:mt-6 sm:text-xl"
+            style={stagger(1)}
+          >
+            Wij rijden naar je toe en repareren je iPhone ter plekke in onze bus. Zodra de reparatie klaar is, heb je
+            hem terug.
           </p>
-          <div className="rise rise-3 mt-9 flex flex-col gap-4 sm:flex-row sm:items-center">
-            <Link href="/boeken" className={buttonClass("primary")}>
-              Boek een reparatie
-            </Link>
-            <Link href="/prijzen" className={textLinkClass}>
-              Bekijk de prijzen
-            </Link>
-          </div>
         </div>
 
-        <TravelCard settings={settings} />
+        <div className="settle" style={stagger(2)}>
+          <PriceCheck catalogue={priced} freeTravelKm={settings ? settings.freeTravelKm : null} />
+        </div>
       </Container>
     </section>
   );
 }
 
-function TravelCard({ settings }: { settings: PublicSettings | null }) {
-  return (
-    <section
-      aria-labelledby="voorrijkosten-titel"
-      className="rise rise-3 rounded-3xl bg-white p-6 ring-1 ring-navy-100 shadow-[0_1px_0_rgba(11,27,51,0.04),0_32px_56px_-32px_rgba(11,27,51,0.3)] md:p-8"
-    >
-      <h2 id="voorrijkosten-titel" className="text-base font-semibold text-navy-700">
-        Voorrijkosten
-      </h2>
+function RouteSection({ priced, settings }: { priced: PricedCatalogue | null; settings: PublicSettings | null }) {
+  const range = priced ? durationRangeOf(priced) : null;
+  const travel = settings ? travelSummary(settings) : null;
 
-      {settings ? (
-        <TravelFacts settings={settings} />
-      ) : (
-        <p className="mt-4 text-lg leading-relaxed text-navy-900">
-          De voorrijkosten hangen af van de afstand tot je adres. Je ziet het bedrag voordat je boekt.
-        </p>
-      )}
-    </section>
-  );
-}
-
-function TravelFacts({ settings }: { settings: PublicSettings }) {
-  const travel = travelSummary(settings);
-
-  return (
-    <>
-      <p className="mt-3 text-6xl font-extrabold tracking-[-0.03em] text-navy-950">
-        {travel.freeKm ? `${travel.freeKm} km` : "0 km"}
-      </p>
-      <p className="mt-2 text-lg text-navy-900">{travel.freeKm ? "afstand gratis" : "geen gratis kilometers"}</p>
-
-      <dl className="mt-8 space-y-5 border-t border-navy-100 pt-6 text-base">
-        <div>
-          <dt className="font-semibold text-navy-950">Daarboven</dt>
-          <dd className="mt-1 text-navy-800">{travel.over}</dd>
-        </div>
-        {travel.example ? (
-          <div>
-            <dt className="font-semibold text-navy-950">Voorbeeld</dt>
-            <dd className="mt-1 text-navy-800">{travel.example}</dd>
-          </div>
-        ) : null}
-        <div>
-          <dt className="font-semibold text-navy-950">Maximale afstand</dt>
-          <dd className="mt-1 text-navy-800">{travel.maxKm} km vanaf ons vertrekpunt</dd>
-        </div>
-      </dl>
-    </>
-  );
-}
-
-function Steps() {
-  return (
-    <section aria-labelledby="stappen-titel" className="py-16 md:py-24">
-      <Container>
-        <h2
-          id="stappen-titel"
-          className="max-w-[20ch] text-3xl font-extrabold leading-tight tracking-[-0.02em] text-navy-950 md:text-4xl"
-        >
-          Zo werkt het in vier stappen
-        </h2>
-
-        <ol className="mt-12 grid gap-10 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">
-          {steps.map((step, index) => (
-            <li key={step.title}>
-              <span className="flex size-10 items-center justify-center rounded-full bg-navy-900 text-sm font-bold text-white">
-                {index + 1}
-              </span>
-              <h3 className="mt-5 text-lg font-bold text-navy-950">{step.title}</h3>
-              <p className="mt-2 leading-relaxed text-navy-800">{step.text}</p>
-            </li>
-          ))}
-        </ol>
-
-        <p className="mt-12">
-          <Link href="/hoe-het-werkt" className={textLinkClass}>
-            Lees hoe het werkt, stap voor stap
-          </Link>
-        </p>
-      </Container>
-    </section>
-  );
-}
-
-function PriceTeaser({ repairs }: { repairs: ReturnType<typeof summarizeRepairs> | null }) {
-  return (
-    <section aria-labelledby="prijzen-titel" className="bg-white py-16 md:py-24">
-      <Container>
-        <h2
-          id="prijzen-titel"
-          className="max-w-[20ch] text-3xl font-extrabold leading-tight tracking-[-0.02em] text-navy-950 md:text-4xl"
-        >
-          Vaste prijzen per reparatie
-        </h2>
-        <p className="mt-4 max-w-[52ch] text-lg leading-relaxed text-navy-800">
-          De reparatieprijs zie je voordat je boekt. Voorrijkosten komen daar apart bij.
-        </p>
-
-        <div className="mt-12">
-          {repairs === null ? (
-            <Notice>We kunnen de prijzen nu niet laden. Probeer het later opnieuw.</Notice>
-          ) : repairs.length === 0 ? (
-            <Notice>Er staan nog geen prijzen online. Kijk later nog eens.</Notice>
-          ) : (
-            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {repairs.slice(0, 6).map((repair) => (
-                <li key={repair.id} className="rounded-2xl bg-navy-50 p-6 ring-1 ring-navy-100">
-                  <h3 className="text-lg font-bold text-navy-950">{repair.name}</h3>
-                  {repair.description ? (
-                    <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-navy-700">{repair.description}</p>
-                  ) : null}
-                  <p className="mt-6 text-sm font-medium text-navy-700">Vanaf</p>
-                  <p className="text-3xl font-extrabold tracking-[-0.02em] text-navy-950">
-                    {formatEuro(repair.fromPriceCents)}
-                  </p>
-                  <p className="mt-2 text-sm text-navy-700">
-                    Duur:{" "}
-                    {repair.minDurationMinutes === repair.maxDurationMinutes
-                      ? `${repair.minDurationMinutes} min`
-                      : `${repair.minDurationMinutes} tot ${repair.maxDurationMinutes} min`}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <p className="mt-10">
-          <Link href="/prijzen" className={textLinkClass}>
-            Bekijk alle prijzen per toestel
-          </Link>
-        </p>
-      </Container>
-    </section>
-  );
-}
-
-function Trust({ settings }: { settings: PublicSettings | null }) {
-  const points = [
+  const stops: ServiceStop[] = [
     {
-      title: "Prijs vooraf duidelijk",
-      text: "Je ziet de reparatieprijs voordat je boekt. Alleen de voorrijkosten komen daar nog bij.",
+      scene: "boeken",
+      title: "Je boekt online",
+      body: <p>Kies je model en de reparatie. Je ziet de prijs vooraf en legt je tijdstip vast met een aanbetaling.</p>,
+      fact: settings ? `Aanbetaling: ${depositPhrase(settings)}` : "Prijs vooraf, aanbetaling online",
     },
     {
-      title: "Terug op het afgesproken moment",
-      text: "Je toestel is uiterlijk op het eindtijdstip van je boeking weer bij je.",
+      scene: "rijden",
+      title: "Wij rijden naar je toe",
+      body: <p>Je geeft je adres op. Op het afgesproken tijdstip staan we met de bus bij je voor de deur.</p>,
+      fact: travel
+        ? travel.freeKm
+          ? `Voorrijkosten pas boven ${travel.freeKm} km`
+          : `Voorrijkosten ${travel.perKm} per km`
+        : "Voorrijkosten zie je bij het boeken",
     },
     {
-      title: "Betalen in twee stappen",
-      text: settings
-        ? `Je betaalt ${depositPhrase(settings)} vooraf. Het restant betaal je bij terugbrengen, met pin of contant.`
-        : "Een aanbetaling vooraf en het restant bij terugbrengen, met pin of contant.",
+      scene: "repareren",
+      title: "Reparatie in de bus",
+      body: (
+        <p>
+          We repareren je iPhone ter plekke, in onze bus. Hoe lang dat duurt, hangt af van de reparatie en zie je al bij
+          de prijs.
+        </p>
+      ),
+      fact: range
+        ? range.min === range.max
+          ? `Duur: ${range.min} minuten`
+          : `Duur: ${range.min} tot ${range.max} minuten`
+        : undefined,
     },
     {
-      title: "Annuleren tot het begin",
-      text: "Tot het moment dat je afspraak begint, kun je annuleren. De terugbetaling staat bij de vragen.",
+      scene: "terug",
+      title: "Terug bij jou",
+      body: <p>Zodra de reparatie klaar is, krijg je je iPhone terug. Dan betaal je het restbedrag.</p>,
+      fact: "Restbedrag met pin of contant",
     },
   ];
 
   return (
-    <section aria-labelledby="vertrouwen-titel" className="on-dark bg-navy-950 py-16 text-white md:py-24">
+    <section aria-labelledby="route-titel" className="pb-16 pt-8 md:pb-24 md:pt-12">
       <Container>
-        <h2
-          id="vertrouwen-titel"
-          className="max-w-[22ch] text-3xl font-extrabold leading-tight tracking-[-0.02em] md:text-4xl"
-        >
-          Waar je op kunt rekenen
+        <h2 id="route-titel" className={`${h2Class} max-w-[16ch]`}>
+          Van boeking tot terug in je hand
         </h2>
-
-        <ul className="mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
-          {points.map((point) => (
-            <li key={point.title}>
-              <h3 className="text-lg font-bold">{point.title}</h3>
-              <p className="mt-2 leading-relaxed text-navy-200">{point.text}</p>
-            </li>
-          ))}
-        </ul>
+        <div className="mt-12 md:mt-16">
+          <ServiceRoute stops={stops} />
+        </div>
       </Container>
     </section>
   );
 }
 
-function FaqTeaser({ items }: { items: ReturnType<typeof buildFaq> }) {
+function TravelSection({ settings }: { settings: PublicSettings | null }) {
+  const travel = settings ? travelSummary(settings) : null;
+
   return (
-    <section aria-labelledby="faq-titel" className="py-16 md:py-24">
-      <Container className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
-        <div>
-          <h2 id="faq-titel" className="text-3xl font-extrabold leading-tight tracking-[-0.02em] text-navy-950 md:text-4xl">
-            Veelgestelde vragen
+    <section aria-labelledby="voorrijkosten-titel" className="py-16 md:py-24">
+      <Container>
+        <div className="max-w-[58ch]">
+          <h2 id="voorrijkosten-titel" className={h2Class}>
+            Voorrijkosten, vooraf duidelijk
           </h2>
-          <p className="mt-4 leading-relaxed text-navy-800">Staat je vraag er niet bij? Neem gerust contact op.</p>
-          <p className="mt-8">
-            <Link href="/faq" className={textLinkClass}>
+          <p className={`mt-4 ${leadClass}`}>
+            {travel
+              ? `${travel.free} ${travel.over} Schuif naar jouw afstand en zie wat het kost.`
+              : "De voorrijkosten hangen af van de afstand tot je adres. Je ziet het bedrag voordat je betaalt."}
+          </p>
+        </div>
+
+        {settings ? (
+          <div className="mt-10 max-w-[52rem]">
+            <TravelFee
+              rule={{
+                freeTravelKm: settings.freeTravelKm,
+                pricePerKmCents: settings.pricePerKmCents,
+                travelDistanceMode: settings.travelDistanceMode,
+              }}
+              maxTravelKm={settings.maxTravelKm}
+            />
+          </div>
+        ) : null}
+      </Container>
+    </section>
+  );
+}
+
+function PricePreview({ table }: { table: FromPriceTable | null }) {
+  return (
+    <section aria-labelledby="prijzen-titel" className="py-16 md:py-24">
+      <Container>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="max-w-[52ch]">
+            <h2 id="prijzen-titel" className={h2Class}>
+              Vaste prijzen per model
+            </h2>
+            <p className={`mt-4 ${leadClass}`}>De reparatieprijs staat vast voordat je boekt.</p>
+          </div>
+          <Link href="/prijzen" className={`${textLinkClass} inline-flex min-h-11 items-center self-start sm:self-auto`}>
+            Bekijk alle prijzen
+          </Link>
+        </div>
+
+        <div className="mt-10">
+          {table ? (
+            <div className="overflow-hidden rounded-panel bg-ink-900 shadow-panel ring-1 ring-line">
+              <table className="w-full border-collapse text-left">
+                <caption className="sr-only">Vanaf-prijs per model voor de meest gevraagde reparaties</caption>
+                <thead>
+                  <tr className="border-b border-line-strong">
+                    <th scope="col" className="px-4 py-3.5 text-sm font-medium text-steel-400 sm:px-6">
+                      Model
+                    </th>
+                    {table.repairs.map((repair) => (
+                      <th
+                        key={repair.id}
+                        scope="col"
+                        className="px-4 py-3.5 text-right text-sm font-medium text-steel-400 sm:px-6"
+                      >
+                        {repair.name}
+                        <span className="block text-xs font-normal text-steel-500">vanaf</span>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {table.rows.map((row) => (
+                    <tr key={row.model.id}>
+                      <th scope="row" className="px-4 py-3.5 font-medium text-steel-100 sm:px-6">
+                        {row.model.name}
+                      </th>
+                      {row.from.map((cents, index) => (
+                        <td
+                          key={table.repairs[index].id}
+                          className="figures whitespace-nowrap px-4 py-3.5 text-right text-steel-50 sm:px-6"
+                        >
+                          {cents === null ? (
+                            <span className="text-steel-500">
+                              <span aria-hidden="true">-</span>
+                              <span className="sr-only">Niet beschikbaar</span>
+                            </span>
+                          ) : (
+                            formatEuro(cents)
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <Notice>De prijzen zijn nu niet te laden. Bij het boeken zie je de prijs voordat je iets betaalt.</Notice>
+          )}
+        </div>
+      </Container>
+    </section>
+  );
+}
+
+function PaymentSection({ settings }: { settings: PublicSettings | null }) {
+  return (
+    <section aria-labelledby="betalen-titel" className="py-16 md:py-24">
+      <Container>
+        <h2 id="betalen-titel" className={h2Class}>
+          Betalen en annuleren
+        </h2>
+
+        <div className="mt-10 grid gap-x-16 gap-y-10 border-t border-line pt-10 md:grid-cols-2">
+          <div className="space-y-8">
+            <div>
+              <h3 className={h3Class}>Aanbetaling bij het boeken</h3>
+              <p className="mt-2 max-w-[48ch] leading-relaxed text-steel-400">
+                {settings
+                  ? `Je betaalt ${depositPhrase(settings)} online. Daarmee ligt je tijdstip vast.`
+                  : "Je betaalt een aanbetaling online. Daarmee ligt je tijdstip vast."}
+                {settings?.allowFullPrepay ? " Je kunt ook meteen het hele bedrag betalen." : null}
+              </p>
+            </div>
+            <div>
+              <h3 className={h3Class}>Restbedrag bij teruggave</h3>
+              <p className="mt-2 max-w-[48ch] leading-relaxed text-steel-400">
+                Het restbedrag betaal je als je je iPhone terugkrijgt, met pin of contant.
+              </p>
+            </div>
+          </div>
+          <div>
+            <h3 className={h3Class}>Annuleren</h3>
+            <p className="mt-2 max-w-[48ch] leading-relaxed text-steel-400">
+              Je kunt annuleren tot het moment dat je afspraak begint, via je boekingspagina.{" "}
+              {settings ? refundText(settings) : "Hoeveel je terugkrijgt, hangt af van het moment van annuleren."}
+            </p>
+            <p className="mt-4">
+              <Link href="/voorwaarden" className={`${textLinkClass} inline-flex min-h-11 items-center`}>
+                Lees de voorwaarden
+              </Link>
+            </p>
+          </div>
+        </div>
+      </Container>
+    </section>
+  );
+}
+
+function FaqSection({ items }: { items: FaqItem[] }) {
+  return (
+    <section aria-labelledby="vragen-titel" className="py-16 md:py-24">
+      <Container className="grid gap-10 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] lg:gap-16">
+        <div>
+          <h2 id="vragen-titel" className={h2Class}>
+            Vragen
+          </h2>
+          <p className={`mt-4 max-w-[36ch] ${leadClass}`}>Staat je vraag er niet bij? Bekijk alle vragen of neem contact op.</p>
+          <p className="mt-6 flex flex-wrap gap-x-6">
+            <Link href="/faq" className={`${textLinkClass} inline-flex min-h-11 items-center`}>
               Alle vragen
+            </Link>
+            <Link href="/contact" className={`${textLinkClass} inline-flex min-h-11 items-center`}>
+              Contact
             </Link>
           </p>
         </div>
         <FaqList items={items} groupName="faq-home" />
-      </Container>
-    </section>
-  );
-}
-
-function ClosingCta({ settings }: { settings: PublicSettings | null }) {
-  return (
-    <section aria-labelledby="afsluiting-titel" className="pb-20 md:pb-28">
-      <Container>
-        <div className="flex flex-col gap-8 rounded-3xl bg-white p-8 ring-1 ring-navy-100 md:flex-row md:items-center md:justify-between md:p-12">
-          <div>
-            <h2 id="afsluiting-titel" className="text-2xl font-extrabold tracking-[-0.02em] text-navy-950 md:text-3xl">
-              Klaar om je toestel te laten repareren?
-            </h2>
-            <p className="mt-3 max-w-[46ch] leading-relaxed text-navy-800">
-              Boek je tijdstip en betaal de aanbetaling om het vast te leggen.
-              {settings?.phone ? (
-                <>
-                  {" "}
-                  Liever bellen? Dat kan op{" "}
-                  <a href={phoneHref(settings.phone)} className={textLinkClass}>
-                    {settings.phone}
-                  </a>
-                  .
-                </>
-              ) : null}
-            </p>
-          </div>
-          <Link href="/boeken" className={`${buttonClass("primary")} shrink-0`}>
-            Boek een reparatie
-          </Link>
-        </div>
       </Container>
     </section>
   );

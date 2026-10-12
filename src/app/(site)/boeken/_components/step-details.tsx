@@ -24,7 +24,7 @@ export function StepDetails({
 
   return (
     <>
-      <StepHeading title="Hoe bereiken we je?" text="Wij gebruiken je gegevens alleen voor deze afspraak." />
+      <StepHeading title="Hoe bereiken wij je?" text="Wij gebruiken je gegevens alleen voor deze afspraak." />
 
       <div className={`${stepPanelClass} space-y-5`}>
         <FieldBlock id="name" label="Naam" error={errors.name}>
@@ -79,7 +79,7 @@ export function StepDetails({
           id="note"
           label="Opmerking"
           optional
-          hint="Bijvoorbeeld waar we kunnen parkeren of bij welke deur we aanbellen."
+          hint="Bijvoorbeeld waar wij kunnen parkeren of bij welke deur wij aanbellen."
           error={errors.note}
         >
           <textarea

@@ -1,8 +1,12 @@
 import Link from "next/link";
+import { CalendarBlankIcon, CaretRightIcon } from "@phosphor-icons/react/dist/ssr";
+import { Notice } from "@/components/admin/notice";
+import { PageHeader } from "@/components/admin/page-header";
+import { panelClass, textLinkClass } from "@/components/ui/styles";
 import { requireAdmin } from "@/lib/auth";
-import { addDays, amsterdamDay, formatDuration } from "@/lib/booking/format";
+import { addDays, amsterdamDay, formatClock, formatDayLong, formatDuration } from "@/lib/booking/format";
 import { formatEuro } from "@/lib/money";
-import { amsterdamLocalToIso, formatShopDateTime } from "@/lib/time";
+import { amsterdamLocalToIso } from "@/lib/time";
 import { outstandingCents, STATUS_LABEL, statusBadgeClass } from "./afspraken/shared";
 
 export const metadata = {
@@ -12,22 +16,62 @@ export const metadata = {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-function StatCard({ label, value, hint, href }: { label: string; value: string; hint: string; href?: string }) {
-  const body = (
-    <div className="h-full rounded-2xl bg-white p-4 shadow-sm ring-1 ring-navy-100 md:p-5">
-      <p className="text-xs font-medium uppercase tracking-wide text-navy-600">{label}</p>
-      <p className="mt-2 text-2xl font-semibold tracking-tight text-navy-950 md:text-3xl">{value}</p>
-      <p className="mt-1 text-xs text-navy-500">{hint}</p>
-    </div>
+type Upcoming = {
+  id: string;
+  reference: string;
+  starts_at: string;
+  duration_minutes: number;
+  customer_name: string;
+  model_label: string;
+  status: string;
+};
+
+// Compact tile: label, the figure, one line of context. Tiles that lead somewhere are links.
+function Tile({
+  label,
+  value,
+  hint,
+  href,
+  attention = false,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+  href?: string;
+  attention?: boolean;
+}) {
+  const inner = (
+    <>
+      <span className="flex items-center justify-between gap-2 text-sm text-steel-400">
+        {label}
+        {href && (
+          <CaretRightIcon
+            aria-hidden="true"
+            className="size-4 shrink-0 text-steel-500 transition-transform duration-150 ease-out-strong group-hover:translate-x-0.5"
+          />
+        )}
+      </span>
+      <span className="figures mt-3 block font-display text-[1.25rem] font-semibold leading-none tracking-[-0.02em] text-steel-50 min-[400px]:text-[1.5rem] sm:text-[1.75rem] lg:text-[2rem]">
+        {value}
+      </span>
+      <span className="mt-2 block text-[0.8125rem] leading-snug text-steel-400">{hint}</span>
+    </>
   );
 
+  const surface = `block rounded-panel bg-ink-900 p-3.5 shadow-panel ring-1 sm:p-5 ${
+    attention ? "ring-cyan-400/40" : "ring-line"
+  }`;
+
   if (!href) {
-    return body;
+    return <div className={surface}>{inner}</div>;
   }
 
   return (
-    <Link href={href} className="block rounded-2xl transition hover:-translate-y-px hover:shadow-md">
-      {body}
+    <Link
+      href={href}
+      className={`${surface} group transition-[background-color,transform] duration-150 ease-out-strong hover:bg-ink-850 active:scale-[0.98]`}
+    >
+      {inner}
     </Link>
   );
 }
@@ -96,100 +140,105 @@ export default async function AdminOverviewPage() {
       sum + outstandingCents(appointment.total_cents, appointment.paid_cents),
     0,
   );
-  const upcoming: {
-    id: string;
-    reference: string;
-    starts_at: string;
-    duration_minutes: number;
-    customer_name: string;
-    model_label: string;
-    status: string;
-  }[] = upcomingResult.data ?? [];
+  const upcoming: Upcoming[] = upcomingResult.data ?? [];
+  const todayCount = todayResult.count ?? 0;
+  const weekCount = weekResult.count ?? 0;
+  const newCount = newResult.count ?? 0;
+
+  // Group the next appointments per calendar day, so the list reads like a day planner.
+  const days: { day: string; items: Upcoming[] }[] = [];
+  for (const appointment of upcoming) {
+    const day = amsterdamDay(new Date(appointment.starts_at));
+    const last = days.at(-1);
+    if (last && last.day === day) {
+      last.items.push(appointment);
+    } else {
+      days.push({ day, items: [appointment] });
+    }
+  }
+
+  const dayLabel = (day: string) => (day === today ? "Vandaag" : day === tomorrow ? "Morgen" : formatDayLong(day));
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight text-navy-950">Overzicht</h1>
-        <p className="mt-1 text-sm text-navy-600">Afspraken, betalingen en wat nog open staat.</p>
-      </header>
+    <div>
+      <PageHeader title="Overzicht" description={formatDayLong(today)} />
 
       {failed && (
-        <p className="rounded-2xl bg-white p-4 text-sm text-red-700 shadow-sm ring-1 ring-navy-100">
+        <Notice tone="bad" role="alert" className="mb-6">
           Een deel van het overzicht kon niet worden geladen. Ververs de pagina om het opnieuw te proberen.
-        </p>
+        </Notice>
       )}
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-        <StatCard
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+        <Tile
           label="Vandaag"
-          value={String(todayResult.count ?? 0)}
-          hint="afspraken"
+          value={String(todayCount)}
+          hint={`${todayCount === 1 ? "afspraak" : "afspraken"}, ${weekCount} in de komende 7 dagen`}
           href="/admin/afspraken"
         />
-        <StatCard
-          label="Komende 7 dagen"
-          value={String(weekResult.count ?? 0)}
-          hint="afspraken"
-          href="/admin/afspraken"
-        />
-        <StatCard
+        <Tile
           label="Nog te bevestigen"
-          value={String(newResult.count ?? 0)}
-          hint="nieuwe afspraken"
+          value={String(newCount)}
+          hint={newCount > 0 ? "Nieuwe boekingen bekijken" : "Alles is bevestigd"}
           href="/admin/afspraken?status=new"
+          attention={newCount > 0}
         />
-        <StatCard
-          label="Betaald deze maand"
-          value={formatEuro(paidThisMonth)}
-          hint="ontvangen bedragen"
-        />
-        <StatCard
-          label="Openstaand"
-          value={formatEuro(openBalance)}
-          hint="nog te ontvangen"
-        />
+        <Tile label="Betaald deze maand" value={formatEuro(paidThisMonth)} hint="Ontvangen bedragen" />
+        <Tile label="Openstaand" value={formatEuro(openBalance)} hint="Nog te ontvangen" />
       </div>
 
-      <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-navy-100 md:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight text-navy-950">Eerstvolgende afspraken</h2>
-            <p className="mt-1 text-sm text-navy-600">De volgende tien afspraken vanaf nu.</p>
-          </div>
-          <Link href="/admin/afspraken" className="text-sm font-medium text-navy-800 underline underline-offset-4">
+      <section className={`${panelClass} mt-6 overflow-hidden lg:mt-8`}>
+        <div className="flex items-center justify-between gap-3 px-4 pt-3 sm:px-6 sm:pt-4">
+          <h2 className="font-display text-lg font-semibold tracking-[-0.02em] text-steel-50">Eerstvolgende afspraken</h2>
+          <Link href="/admin/afspraken" className={`${textLinkClass} inline-flex min-h-11 shrink-0 items-center text-sm`}>
             Alle afspraken
           </Link>
         </div>
 
-        {upcoming.length === 0 ? (
-          <p className="mt-5 text-sm text-navy-600">Geen komende afspraken.</p>
+        {days.length === 0 ? (
+          <div className="flex items-start gap-3 px-4 pb-6 pt-3 sm:px-6">
+            <CalendarBlankIcon aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-steel-500" />
+            <p className="text-[0.95rem] text-steel-400">
+              Geen komende afspraken. Nieuwe boekingen verschijnen hier zodra ze binnenkomen.
+            </p>
+          </div>
         ) : (
-          <ul className="mt-5 divide-y divide-navy-100">
-            {upcoming.map((appointment) => (
-              <li key={appointment.id}>
-                <Link
-                  href={`/admin/afspraken/${appointment.id}`}
-                  className="flex flex-col gap-1.5 py-3 transition hover:bg-navy-50/60 md:flex-row md:items-center md:gap-6 md:px-2"
-                >
-                  <div className="flex items-center justify-between gap-3 md:w-56 md:shrink-0">
-                    <span className="text-sm font-semibold text-navy-950">
-                      {formatShopDateTime(appointment.starts_at)}
-                    </span>
-                    <span className={statusBadgeClass(appointment.status)}>
-                      {STATUS_LABEL[appointment.status] ?? appointment.status}
-                    </span>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm text-navy-900">{appointment.customer_name}</p>
-                    <p className="truncate text-sm text-navy-600">
-                      {appointment.model_label} · {formatDuration(appointment.duration_minutes)}
-                    </p>
-                  </div>
-                  <span className="font-mono text-xs text-navy-500 md:shrink-0">{appointment.reference}</span>
-                </Link>
-              </li>
+          <div className="pb-2">
+            {days.map((group) => (
+              <div key={group.day} className="mt-2">
+                <h3 className="px-4 pb-1.5 pt-2 sm:px-6">
+                  <span className="font-sans text-[0.8125rem] font-medium tracking-normal text-steel-400">
+                    {dayLabel(group.day)}
+                  </span>
+                </h3>
+                <ul className="divide-y divide-line border-t border-line">
+                  {group.items.map((appointment) => (
+                    <li key={appointment.id}>
+                      <Link
+                        href={`/admin/afspraken/${appointment.id}`}
+                        className="grid min-h-16 grid-cols-[3.75rem_minmax(0,1fr)_auto] items-center gap-x-3 px-4 py-3 transition-colors duration-150 hover:bg-ink-850 sm:grid-cols-[4.5rem_minmax(0,1fr)_auto_auto] sm:gap-x-5 sm:px-6"
+                      >
+                        <span>
+                          <span className="figures block font-display text-base font-semibold text-steel-50">
+                            {formatClock(appointment.starts_at)}
+                          </span>
+                          <span className="block text-xs text-steel-400">{formatDuration(appointment.duration_minutes)}</span>
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block truncate font-medium text-steel-100">{appointment.customer_name}</span>
+                          <span className="block truncate text-sm text-steel-400">{appointment.model_label}</span>
+                        </span>
+                        <span className="figures hidden text-xs text-steel-500 sm:block">{appointment.reference}</span>
+                        <span className={statusBadgeClass(appointment.status)}>
+                          {STATUS_LABEL[appointment.status] ?? appointment.status}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </section>
     </div>

@@ -36,7 +36,7 @@ export function formatClock(iso: string): string {
 }
 
 export function formatWindow(startIso: string, endIso: string): string {
-  return `${formatClock(startIso)} – ${formatClock(endIso)}`;
+  return `${formatClock(startIso)} - ${formatClock(endIso)}`;
 }
 
 export function formatDateTime(iso: string): string {

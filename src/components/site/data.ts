@@ -44,15 +44,6 @@ export type Catalogue = {
   prices: Price[];
 };
 
-export type RepairSummary = {
-  id: string;
-  name: string;
-  description: string | null;
-  fromPriceCents: number;
-  minDurationMinutes: number;
-  maxDurationMinutes: number;
-};
-
 type BrandRow = { id: string; name: string; sort_order: number };
 type ModelRow = { id: string; brand_id: string; name: string; sort_order: number };
 type TypeRow = {
@@ -185,30 +176,6 @@ export const getCatalogue = cache(async (): Promise<Catalogue | null> => {
     return null;
   }
 });
-
-// One entry per repair type that has at least one price, with the lowest price and the duration range.
-export function summarizeRepairs(catalogue: Catalogue): RepairSummary[] {
-  return catalogue.repairTypes.flatMap((type) => {
-    const rows = catalogue.prices.filter((price) => price.repairTypeId === type.id);
-
-    if (rows.length === 0) {
-      return [];
-    }
-
-    const durations = rows.map((row) => row.durationMinutes);
-
-    return [
-      {
-        id: type.id,
-        name: type.name,
-        description: type.description,
-        fromPriceCents: Math.min(...rows.map((row) => row.priceCents)),
-        minDurationMinutes: Math.min(...durations),
-        maxDurationMinutes: Math.max(...durations),
-      },
-    ];
-  });
-}
 
 export function durationRange(catalogue: Catalogue): { min: number; max: number } | null {
   if (catalogue.prices.length === 0) {
