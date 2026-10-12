@@ -71,10 +71,11 @@ Dit kan ik niet voor je doen. Je hebt een Vercel-account nodig.
 1. Ga naar https://vercel.com/new en log in met GitHub.
 2. Kies de repository **054studios/054repairs**.
 3. Bij **Branch**: kies `claude/fase-1-basis`, of zet die branch later om naar `main` als je die gebruikt.
-4. Vul bij **Environment Variables** in:
-   - `NEXT_PUBLIC_SUPABASE_URL` = `https://zggntvxvbboqehpeakme.supabase.co`
-   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` = de publishable key uit `.env.example`
-   - `NEXT_PUBLIC_SITE_URL` = het adres dat Vercel je geeft, bijvoorbeeld `https://054repairs.vercel.app` (zet dit na de eerste deploy en deploy opnieuw)
+4. Vul bij **Environment Variables** in. Kies bij **Type** voor **Config** (niet Secret) voor alle `NEXT_PUBLIC_`-variabelen. Die zijn publiek en worden in de browser gebruikt. Vercel geeft anders een waarschuwing over het voorvoegsel.
+   - `NEXT_PUBLIC_SUPABASE_URL` = `https://zggntvxvbboqehpeakme.supabase.co` (type: Config)
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` = de publishable key uit `.env.example` (type: Config)
+   - `NEXT_PUBLIC_SITE_URL` = het adres dat Vercel je geeft, bijvoorbeeld `https://054repairs.vercel.app` (type: Config; zet dit na de eerste deploy en deploy opnieuw)
+   - Later, zonder `NEXT_PUBLIC_`-voorvoegsel en als **Secret**: `SUPABASE_SERVICE_ROLE_KEY`, `APP_ENCRYPTION_KEY`, `RESEND_API_KEY`
 5. Klik op **Deploy**. Je krijgt een link zoals `https://054repairs-xxxx.vercel.app`. Dat is de testlink.
 
 **Admin-account aanmaken** (eenmalig, zie ook hieronder):
