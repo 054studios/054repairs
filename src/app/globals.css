@@ -1,21 +1,150 @@
 @import "tailwindcss";
 
-/* Brand: donkerblauw. Navy scale used across the site and the admin dashboard. */
+/* Brand: donkerblauw. The navy scale is shared by the public site and the admin dashboard. */
 @theme {
   --color-navy-50: #f3f6fb;
   --color-navy-100: #e3eaf4;
   --color-navy-200: #c5d3e6;
+  --color-navy-300: #9fb4d2;
+  --color-navy-400: #7592ba;
+  --color-navy-500: #5377a3;
   --color-navy-600: #2f5c94;
   --color-navy-700: #244a7a;
   --color-navy-800: #1b3a63;
   --color-navy-900: #132b4d;
   --color-navy-950: #0b1b33;
 
+  /* The one accent. Used on dark surfaces and in notes, never for body text. */
+  --color-accent: #f2b84b;
+  --color-accent-strong: #f7c564;
+  --color-accent-soft: #fdf3dc;
+
   --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-padding-top: 5rem;
 }
 
 body {
   background: var(--color-navy-50);
   color: var(--color-navy-950);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+/* Keyboard focus is always visible. On dark surfaces the accent takes over. */
+:focus-visible {
+  outline: 3px solid var(--color-navy-600);
+  outline-offset: 3px;
+  border-radius: 0.5rem;
+}
+
+.on-dark :focus-visible {
+  outline-color: var(--color-accent);
+}
+
+/* One orchestrated entrance on the home hero. Transform and opacity only. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.rise {
+  animation: rise 600ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.rise-2 {
+  animation-delay: 80ms;
+}
+
+.rise-3 {
+  animation-delay: 160ms;
+}
+
+/* FAQ: the plus turns into a minus, and the answer fades in when it opens. */
+.faq-summary {
+  position: relative;
+}
+
+.faq-plus-h,
+.faq-plus-v {
+  position: absolute;
+  background: var(--color-navy-900);
+  border-radius: 9999px;
+  transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.faq-plus-h {
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+}
+
+.faq-plus-v {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+}
+
+details[open] > summary .faq-plus-v {
+  transform: scaleY(0);
+}
+
+@keyframes answer-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+details[open] > .faq-answer {
+  animation: answer-in 220ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+details > summary {
+  list-style: none;
+}
+
+details > summary::-webkit-details-marker {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
