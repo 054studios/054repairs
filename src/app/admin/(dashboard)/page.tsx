@@ -1,9 +1,13 @@
+import { requireAdmin } from "@/lib/auth";
+
 export const metadata = {
   title: "Overzicht | 054repairs admin",
   robots: { index: false, follow: false },
 };
 
-export default function AdminOverviewPage() {
+export default async function AdminOverviewPage() {
+  await requireAdmin();
+
   return (
     <section>
       <h1 className="text-2xl font-semibold tracking-tight text-navy-950">Overzicht</h1>
