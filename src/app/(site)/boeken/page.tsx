@@ -1,51 +1,113 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
-import { loadBookingCatalog } from "@/lib/booking/catalog";
-import { cardClass } from "@/lib/booking/styles";
-import { BookingWizard } from "./_components/booking-wizard";
+import { loadBookingCatalog, loadModelOptions } from "@/lib/booking/catalog";
+import { idSchema } from "@/lib/booking/schema";
+import { buttonClass, skeletonClass, stepPanelClass } from "@/lib/booking/styles";
+import type { BookingCatalog } from "@/lib/booking/types";
+import { createClient } from "@/lib/supabase/server";
+import { BookingWizard, type WizardPreset } from "./_components/booking-wizard";
 
 export const metadata: Metadata = {
   title: "Online een reparatie boeken",
-  description: "Boek in een paar stappen een telefoonreparatie aan huis. Wij halen je toestel op en brengen het terug.",
+  description:
+    "Boek in een paar stappen een iPhone-reparatie bij jou in de buurt. Wij rijden naar je toe en repareren ter plekke in de bus.",
 };
 
-export default function BoekenPage() {
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+export default function BoekenPage({ searchParams }: { searchParams: SearchParams }) {
   return (
-    <div className="mx-auto w-full max-w-xl px-4 py-6 md:py-10">
+    <div className="mx-auto w-full max-w-[40rem] px-4 pb-10 pt-6 md:pb-20 md:pt-12">
       <Suspense fallback={<BookingSkeleton />}>
-        <BookingLoader />
+        <BookingLoader searchParams={searchParams} />
       </Suspense>
     </div>
   );
 }
 
-async function BookingLoader() {
+function single(value: string | string[] | undefined): string | null {
+  const text = Array.isArray(value) ? value[0] : value;
+  return text && idSchema.safeParse(text).success ? text : null;
+}
+
+// Preselect from the home price check: /boeken?model=<id>&repair=<id>&quality=<id>.
+// Anything that does not match the catalogue is ignored without a message.
+async function readPreset(searchParams: SearchParams, catalog: BookingCatalog): Promise<WizardPreset | null> {
+  const query = await searchParams;
+  const modelId = single(query.model);
+
+  if (!modelId || !catalog.models.some((model) => model.id === modelId)) {
+    return null;
+  }
+
+  const options = await loadModelOptions(await createClient(), modelId).catch(() => null);
+
+  if (!options) {
+    return { modelId, options: null, selections: {} };
+  }
+
+  const repairId = single(query.repair);
+  const qualityId = single(query.quality);
+  const selections: Record<string, string> = {};
+
+  if (repairId && catalog.repairTypes.some((repair) => repair.id === repairId)) {
+    const forRepair = options.filter((option) => option.repairTypeId === repairId);
+    const exact = forRepair.find((option) => option.qualityId === qualityId);
+    // Without a valid quality, start with the first quality in catalogue order, as the wizard does.
+    const rank = new Map(catalog.qualities.map((quality, index) => [quality.id, index]));
+    const fallback = [...forRepair].sort((a, b) => (rank.get(a.qualityId) ?? 0) - (rank.get(b.qualityId) ?? 0))[0];
+    const pick = exact ?? fallback;
+
+    if (pick) {
+      selections[repairId] = pick.qualityId;
+    }
+  }
+
+  return { modelId, options, selections };
+}
+
+async function BookingLoader({ searchParams }: { searchParams: SearchParams }) {
   const catalog = await loadBookingCatalog();
 
   if (!catalog) {
     return (
-      <section className={cardClass}>
-        <h1 className="text-xl font-semibold text-navy-950">Boeken is tijdelijk niet beschikbaar</h1>
-        <p className="mt-2 text-base text-navy-600">
-          We kunnen de beschikbare toestellen nu niet laden. Probeer het later opnieuw.
+      <section className={stepPanelClass}>
+        <h1 className="font-display text-[clamp(1.75rem,6.4vw,2.375rem)] font-semibold leading-[1.08] tracking-[-0.03em] text-steel-50">
+          Boeken lukt op dit moment niet
+        </h1>
+        <p className="mt-3 text-base leading-relaxed text-steel-400">
+          Wij kunnen de toestellen en prijzen nu niet laden. Probeer het over een paar minuten opnieuw.
         </p>
+        <Link href="/boeken" prefetch={false} className={`${buttonClass("secondary", "md")} mt-5`}>
+          Probeer opnieuw
+        </Link>
       </section>
     );
   }
 
-  return <BookingWizard catalog={catalog} />;
+  const preset = await readPreset(searchParams, catalog);
+
+  return <BookingWizard catalog={catalog} preset={preset} />;
 }
 
 function BookingSkeleton() {
   return (
-    <section className={cardClass} aria-busy="true" aria-live="polite">
-      <div className="h-6 w-2/3 rounded-lg bg-navy-100" />
-      <div className="mt-3 h-4 w-1/2 rounded-lg bg-navy-100" />
-      <div className="mt-6 space-y-3">
-        <div className="h-14 rounded-2xl bg-navy-50" />
-        <div className="h-14 rounded-2xl bg-navy-50" />
-        <div className="h-14 rounded-2xl bg-navy-50" />
+    <div aria-busy="true" aria-live="polite">
+      <span className="sr-only">Boeken laden</span>
+      <div className="mb-9 flex items-center gap-4">
+        <div className={`${skeletonClass} h-1 flex-1 rounded-full`} />
+        <div className={`${skeletonClass} h-4 w-12`} />
       </div>
-    </section>
+      <div className={`${skeletonClass} h-9 w-3/4`} />
+      <div className={`${skeletonClass} mt-3 h-5 w-2/3`} />
+      <div className={`${stepPanelClass} mt-6`}>
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+          {Array.from({ length: 6 }, (_, index) => (
+            <div key={index} className={`${skeletonClass} h-[5.5rem]`} />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

@@ -1,11 +1,14 @@
 "use client";
 
-import { MotionConfig, motion } from "motion/react";
-import { useState, useTransition } from "react";
+import { ArrowLeftIcon, WarningCircleIcon } from "@phosphor-icons/react";
+import { AnimatePresence, MotionConfig, motion, useReducedMotion, type Variants } from "motion/react";
+import { useRef, useState, useTransition } from "react";
+import { RouteProgress } from "@/components/ui/route";
+import { formatDuration } from "@/lib/booking/format";
 import { depositCentsFor } from "@/lib/booking/pricing";
 import { WIZARD_STEPS } from "@/lib/booking/routing";
 import { customerSchema, type BookingPayload } from "@/lib/booking/schema";
-import { primaryButton } from "@/lib/booking/styles";
+import { buttonClass } from "@/lib/booking/styles";
 import type {
   AddressSuggestion,
   BookingCatalog,
@@ -14,6 +17,7 @@ import type {
   RepairOption,
   TravelQuote,
 } from "@/lib/booking/types";
+import { formatEuro } from "@/lib/money";
 import {
   calculateTravel,
   createBookingAction,
@@ -31,8 +35,18 @@ import { StepTime } from "./step-time";
 type Customer = { name: string; phone: string; email: string; note: string };
 type CustomerField = keyof Customer;
 
+// Start state from the home price check (/boeken?model=&repair=&quality=), already checked on the server.
+// options is null when the model is valid but its prices could not be loaded.
+export type WizardPreset = {
+  modelId: string;
+  options: RepairOption[] | null;
+  selections: Record<string, string>;
+};
+
 type WizardState = {
   step: number;
+  // 1 = forward, -1 = back. Steers the step transition.
+  direction: 1 | -1;
   brandId: string | null;
   modelId: string | null;
   options: RepairOption[];
@@ -44,15 +58,40 @@ type WizardState = {
   daysFor: number | null;
   day: string | null;
   slots: string[];
+  // The day the slots belong to. Differs from day while loading or after a failed load.
+  slotsFor: string | null;
   startsAt: string | null;
   customer: Customer;
   paymentChoice: PaymentChoice;
 };
 
 // Choices that depend on the repair duration. Cleared whenever the duration changes.
-const SLOT_RESET: Partial<WizardState> = { day: null, slots: [], startsAt: null };
+const SLOT_RESET: Partial<WizardState> = { day: null, slots: [], slotsFor: null, startsAt: null };
 
 const LAST_STEP = WIZARD_STEPS.length - 1;
+
+// Step transition: enter from the travel direction, leave faster to the other side.
+const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
+const SHIFT_PX = 16;
+
+function stepVariants(reduced: boolean): Variants {
+  // Full transform strings keep the animation on the compositor (WAAPI), unlike the x shorthand.
+  const shift = (px: number) => (reduced ? "none" : `translateX(${px}px)`);
+
+  return {
+    enter: (direction: number) => ({ opacity: 0, transform: shift(direction * SHIFT_PX) }),
+    center: { opacity: 1, transform: "none", transition: { duration: 0.22, ease: EASE_OUT } },
+    exit: (direction: number) => ({
+      opacity: 0,
+      transform: shift(direction * -SHIFT_PX),
+      transition: { duration: 0.15, ease: EASE_OUT },
+    }),
+  };
+}
+
+function moveTo(previous: WizardState, target: number): WizardState {
+  return { ...previous, step: target, direction: target >= previous.step ? 1 : -1 };
+}
 
 function toFieldErrors(issues: { path: PropertyKey[]; message: string }[]): Partial<Record<CustomerField, string>> {
   const errors: Partial<Record<CustomerField, string>> = {};
@@ -68,29 +107,48 @@ function toFieldErrors(issues: { path: PropertyKey[]; message: string }[]): Part
   return errors;
 }
 
-export function BookingWizard({ catalog }: { catalog: BookingCatalog }) {
-  const { brands, models, repairTypes, qualities, settings, mollieReady } = catalog;
+const CUSTOMER_ORDER: CustomerField[] = ["name", "phone", "email", "note"];
 
-  const [state, setState] = useState<WizardState>(() => ({
-    step: 0,
-    brandId: brands.length === 1 ? brands[0].id : null,
-    modelId: null,
-    options: [],
-    optionsFor: null,
-    selections: {},
-    address: null,
-    travel: null,
-    days: [],
-    daysFor: null,
-    day: null,
-    slots: [],
-    startsAt: null,
-    customer: { name: "", phone: "", email: "", note: "" },
-    paymentChoice: "deposit",
-  }));
+export function BookingWizard({ catalog, preset = null }: { catalog: BookingCatalog; preset?: WizardPreset | null }) {
+  const { brands, models, repairTypes, qualities, settings, mollieReady } = catalog;
+  const reduceMotion = useReducedMotion() ?? false;
+
+  const [state, setState] = useState<WizardState>(() => {
+    const presetModel = preset ? models.find((model) => model.id === preset.modelId) : undefined;
+    const presetOptions = presetModel && preset?.options ? preset.options : null;
+
+    return {
+      step: presetOptions ? 1 : 0,
+      direction: 1,
+      brandId: presetModel ? presetModel.brandId : brands.length === 1 ? brands[0].id : null,
+      modelId: presetModel ? presetModel.id : null,
+      options: presetOptions ?? [],
+      optionsFor: presetOptions && presetModel ? presetModel.id : null,
+      selections: presetOptions && preset ? preset.selections : {},
+      address: null,
+      travel: null,
+      days: [],
+      daysFor: null,
+      day: null,
+      slots: [],
+      slotsFor: null,
+      startsAt: null,
+      customer: { name: "", phone: "", email: "", note: "" },
+      paymentChoice: "deposit",
+    };
+  });
   const [error, setError] = useState<string | null>(null);
   const [customerErrors, setCustomerErrors] = useState<Partial<Record<CustomerField, string>>>({});
-  const [pending, startTransition] = useTransition();
+  // Navigation (Volgende, booking) and background data (travel fee, times) load separately,
+  // so the main button only shows a busy label for its own work.
+  const [navPending, startNav] = useTransition();
+  const [dataPending, startData] = useTransition();
+  const pending = navPending || dataPending;
+
+  const topRef = useRef<HTMLDivElement>(null);
+  const stepRef = useRef<HTMLDivElement>(null);
+  // Set by user navigation, so the first render never steals focus.
+  const navigated = useRef(false);
 
   const { step } = state;
   const optionsNow = state.modelId !== null && state.optionsFor === state.modelId ? state.options : [];
@@ -111,6 +169,7 @@ export function BookingWizard({ catalog }: { catalog: BookingCatalog }) {
   const totalCents = repairTotalCents + feeCents;
   const paymentChoice: PaymentChoice = settings.allowFullPrepay ? state.paymentChoice : "deposit";
   const depositCents = depositCentsFor(totalCents, settings, paymentChoice);
+  const modelName = models.find((model) => model.id === state.modelId)?.name ?? "";
 
   const repairNames = new Map(repairTypes.map((repair) => [repair.id, repair.name]));
   const qualityNames = new Map(qualities.map((quality) => [quality.id, quality.name]));
@@ -183,7 +242,7 @@ export function BookingWizard({ catalog }: { catalog: BookingCatalog }) {
     setError(null);
     update({ address, travel: null });
 
-    startTransition(async () => {
+    startData(async () => {
       const result = await calculateTravel(address.lat, address.lng);
 
       if (!result.ok) {
@@ -202,7 +261,7 @@ export function BookingWizard({ catalog }: { catalog: BookingCatalog }) {
   }
 
   function loadDays(duration: number, nextStep: number) {
-    startTransition(async () => {
+    startNav(async () => {
       const result = await getAvailableDays(duration);
 
       if (!result.ok) {
@@ -211,16 +270,16 @@ export function BookingWizard({ catalog }: { catalog: BookingCatalog }) {
       }
 
       const days = result.days;
-      setState((previous) => ({ ...previous, days, daysFor: duration, step: nextStep }));
+      setState((previous) => ({ ...moveTo(previous, nextStep), days, daysFor: duration }));
     });
   }
 
   function pickDay(day: string) {
     setError(null);
-    update({ day, slots: [], startsAt: null });
+    update({ day, slots: [], slotsFor: null, startsAt: null });
     const duration = durationMinutes;
 
-    startTransition(async () => {
+    startData(async () => {
       const result = await getSlots(day, duration);
 
       if (!result.ok) {
@@ -229,7 +288,7 @@ export function BookingWizard({ catalog }: { catalog: BookingCatalog }) {
       }
 
       const slots = result.slots;
-      setState((previous) => (previous.day === day ? { ...previous, slots } : previous));
+      setState((previous) => (previous.day === day ? { ...previous, slots, slotsFor: day } : previous));
     });
   }
 
@@ -243,9 +302,25 @@ export function BookingWizard({ catalog }: { catalog: BookingCatalog }) {
     setCustomerErrors((previous) => ({ ...previous, [field]: undefined }));
   }
 
+  // Inline check when leaving a field. Empty required fields wait for Volgende, so nobody is scolded early.
+  function validateField(field: CustomerField) {
+    const value = state.customer[field];
+
+    if (value.trim() === "") {
+      return;
+    }
+
+    const check = customerSchema.shape[field].safeParse(value);
+    setCustomerErrors((previous) => ({
+      ...previous,
+      [field]: check.success ? undefined : check.error.issues[0]?.message,
+    }));
+  }
+
   function goTo(target: number) {
     setError(null);
-    update({ step: target });
+    navigated.current = true;
+    setState((previous) => moveTo(previous, target));
   }
 
   function goNext() {
@@ -263,7 +338,8 @@ export function BookingWizard({ catalog }: { catalog: BookingCatalog }) {
         return;
       }
 
-      startTransition(async () => {
+      navigated.current = true;
+      startNav(async () => {
         const result = await getModelRepairOptions(modelId);
 
         if (!result.ok) {
@@ -272,7 +348,7 @@ export function BookingWizard({ catalog }: { catalog: BookingCatalog }) {
         }
 
         const options = result.options;
-        setState((previous) => ({ ...previous, options, optionsFor: modelId, step: 1 }));
+        setState((previous) => ({ ...moveTo(previous, 1), options, optionsFor: modelId }));
       });
       return;
     }
@@ -292,6 +368,7 @@ export function BookingWizard({ catalog }: { catalog: BookingCatalog }) {
       if (state.daysFor === durationMinutes) {
         goTo(3);
       } else {
+        navigated.current = true;
         loadDays(durationMinutes, 3);
       }
       return;
@@ -308,7 +385,13 @@ export function BookingWizard({ catalog }: { catalog: BookingCatalog }) {
       const check = customerSchema.safeParse(state.customer);
 
       if (!check.success) {
-        setCustomerErrors(toFieldErrors(check.error.issues));
+        const errors = toFieldErrors(check.error.issues);
+        setCustomerErrors(errors);
+        // Take the visitor straight to the first field that needs attention.
+        const first = CUSTOMER_ORDER.find((field) => errors[field] !== undefined);
+        if (first) {
+          document.getElementById(first)?.focus();
+        }
         return;
       }
 
@@ -318,8 +401,7 @@ export function BookingWizard({ catalog }: { catalog: BookingCatalog }) {
   }
 
   function goBack() {
-    setError(null);
-    update({ step: Math.max(0, step - 1) });
+    goTo(Math.max(0, step - 1));
   }
 
   function submit() {
@@ -347,7 +429,7 @@ export function BookingWizard({ catalog }: { catalog: BookingCatalog }) {
       paymentChoice,
     };
 
-    startTransition(async () => {
+    startNav(async () => {
       const result = await createBookingAction(payload);
 
       if (result.ok) {
@@ -357,10 +439,30 @@ export function BookingWizard({ catalog }: { catalog: BookingCatalog }) {
       setError(result.message);
 
       if (result.code === "slot_taken") {
-        setState((previous) => ({ ...previous, day: null, slots: [], startsAt: null, daysFor: null }));
+        navigated.current = true;
+        setState((previous) => ({ ...previous, day: null, slots: [], slotsFor: null, startsAt: null, daysFor: null }));
         loadDays(durationMinutes, 3);
       }
     });
+  }
+
+  // After the old step has left: bring the top of the wizard back into view when it scrolled away.
+  function handleExitComplete() {
+    const top = topRef.current;
+
+    if (top && top.getBoundingClientRect().top < 80) {
+      top.scrollIntoView({ block: "start" });
+    }
+  }
+
+  // After the new step has arrived: move focus to its heading.
+  function handleEntered(definition: unknown) {
+    if (definition !== "center" || !navigated.current) {
+      return;
+    }
+
+    navigated.current = false;
+    stepRef.current?.querySelector<HTMLElement>("[data-step-heading]")?.focus({ preventScroll: true });
   }
 
   function renderStep() {
@@ -372,6 +474,7 @@ export function BookingWizard({ catalog }: { catalog: BookingCatalog }) {
             models={models}
             brandId={state.brandId}
             modelId={state.modelId}
+            phone={settings.phone}
             onBrand={chooseBrand}
             onModel={chooseModel}
           />
@@ -379,14 +482,14 @@ export function BookingWizard({ catalog }: { catalog: BookingCatalog }) {
       case 1:
         return (
           <StepRepairs
+            modelName={modelName}
             repairTypes={offeredRepairs}
             options={optionsNow}
             qualities={qualities}
             selections={state.selections}
-            totalCents={repairTotalCents}
-            durationMinutes={durationMinutes}
             onToggle={toggleRepair}
             onQuality={chooseQuality}
+            onChangeModel={() => goTo(0)}
           />
         );
       case 2:
@@ -394,8 +497,9 @@ export function BookingWizard({ catalog }: { catalog: BookingCatalog }) {
           <StepAddress
             address={state.address}
             travel={state.travel}
-            busy={pending}
+            busy={dataPending}
             onPick={pickAddress}
+            onRetry={() => state.address && pickAddress(state.address)}
             onReset={resetAddress}
           />
         );
@@ -407,25 +511,33 @@ export function BookingWizard({ catalog }: { catalog: BookingCatalog }) {
             days={state.days}
             day={state.day}
             slots={state.slots}
+            slotsLoaded={state.day !== null && state.slotsFor === state.day}
             startsAt={state.startsAt}
-            busy={pending}
+            busy={dataPending}
             onPickDay={pickDay}
             onPickTime={pickTime}
           />
         );
       case 4:
-        return <StepDetails customer={state.customer} errors={customerErrors} onChange={updateCustomer} />;
+        return (
+          <StepDetails
+            customer={state.customer}
+            errors={customerErrors}
+            onChange={updateCustomer}
+            onBlur={validateField}
+          />
+        );
       default:
         return (
           <StepReview
             settings={settings}
-            modelName={models.find((model) => model.id === state.modelId)?.name ?? ""}
+            modelName={modelName}
             lines={reviewLines}
             address={state.address}
+            travel={state.travel}
             day={state.day}
             startsAt={state.startsAt}
             durationMinutes={durationMinutes}
-            repairTotalCents={repairTotalCents}
             feeCents={feeCents}
             totalCents={totalCents}
             depositCents={depositCents}
@@ -439,62 +551,117 @@ export function BookingWizard({ catalog }: { catalog: BookingCatalog }) {
     }
   }
 
-  const nextLabel = step === LAST_STEP ? (mollieReady ? "Naar betalen" : "Afspraak boeken") : "Volgende";
+  // What the action bar shows next to the button: the running amount, or what is still missing.
+  const summary: { label: string; cents: number; detail?: string } | null = (() => {
+    if (step === 1 && chosen.length > 0) {
+      return { label: "Reparatie", cents: repairTotalCents, detail: formatDuration(durationMinutes) };
+    }
+    if (step === 2 && chosen.length > 0) {
+      return state.travel
+        ? { label: "Totaal", cents: totalCents, detail: "met voorrijkosten" }
+        : { label: "Reparatie", cents: repairTotalCents, detail: "zonder voorrijkosten" };
+    }
+    if (step === 3 || step === 4) {
+      return { label: "Totaal", cents: totalCents, detail: formatDuration(durationMinutes) };
+    }
+    if (step === LAST_STEP) {
+      return mollieReady
+        ? { label: "Nu betalen", cents: depositCents, detail: `van ${formatEuro(totalCents)}` }
+        : { label: "Totaal", cents: totalCents };
+    }
+    return null;
+  })();
+
+  // Shown in place of the amount while the step's question is still open.
+  const missing = step === 0 ? "Kies je model" : step === 1 ? "Kies een reparatie" : null;
+
+  const nextLabel = step === LAST_STEP ? (mollieReady ? "Bevestig en betaal" : "Bevestig boeking") : "Volgende";
+  const busyLabel =
+    step === 0 ? "Prijzen laden" : step === 2 ? "Agenda laden" : step === LAST_STEP ? "Boeking vastleggen" : "Even geduld";
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="space-y-6">
-        <div>
-          <div className="flex items-center justify-between gap-4 text-sm text-navy-600">
-            <span>
-              Stap {step + 1} van {WIZARD_STEPS.length}
-            </span>
-            <span className="font-medium text-navy-900">{WIZARD_STEPS[step]}</span>
+      <div ref={topRef} className="flex flex-col">
+        <div className="mb-7 flex items-center gap-4 sm:mb-9">
+          <div className="min-w-0 flex-1">
+            <RouteProgress
+              current={step + 1}
+              total={WIZARD_STEPS.length}
+              label={`Stap ${step + 1} van ${WIZARD_STEPS.length}: ${WIZARD_STEPS[step]}`}
+            />
           </div>
-          <div className="mt-2 flex gap-1.5" aria-hidden="true">
-            {WIZARD_STEPS.map((label, index) => (
-              <span
-                key={label}
-                className={`h-1.5 flex-1 rounded-full transition-colors ${index <= step ? "bg-navy-900" : "bg-navy-200"}`}
-              />
-            ))}
-          </div>
+          <p className="figures shrink-0 text-sm text-steel-400" aria-hidden="true">
+            {step + 1} van {WIZARD_STEPS.length}
+          </p>
         </div>
 
-        <motion.div
-          key={step}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-        >
-          {renderStep()}
-        </motion.div>
+        <AnimatePresence mode="wait" initial={false} custom={state.direction} onExitComplete={handleExitComplete}>
+          <motion.div
+            key={step}
+            ref={stepRef}
+            custom={state.direction}
+            variants={stepVariants(reduceMotion)}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            onAnimationComplete={handleEntered}
+          >
+            {renderStep()}
+          </motion.div>
+        </AnimatePresence>
 
-        {error && (
-          <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800 ring-1 ring-red-200">
-            {error}
-          </p>
-        )}
-
-        <div className="flex gap-3">
-          {step > 0 && (
-            <button
-              type="button"
-              onClick={goBack}
-              disabled={pending}
-              className="inline-flex shrink-0 items-center justify-center rounded-xl bg-white px-5 py-3.5 text-base font-semibold text-navy-900 ring-1 ring-navy-200 transition hover:bg-navy-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-600 disabled:opacity-50"
+        <div className="sticky bottom-0 z-20 -mx-4 mt-6 border-t border-line bg-ink-900 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 md:static md:mx-0 md:mt-8 md:border-t-0 md:bg-transparent md:p-0">
+          {error && (
+            <p
+              role="alert"
+              className="mb-3 flex items-start gap-2 rounded-ui bg-bad/[0.08] px-3 py-2.5 text-[0.9375rem] leading-snug text-steel-50 ring-1 ring-bad/30"
             >
-              Terug
-            </button>
+              <WarningCircleIcon size={20} aria-hidden="true" className="mt-px shrink-0 text-bad" />
+              <span>{error}</span>
+            </p>
           )}
-          <div className="flex-1">
+
+          <div className="flex items-center gap-3">
+            {step > 0 && (
+              <button
+                type="button"
+                onClick={goBack}
+                disabled={navPending}
+                aria-label="Terug"
+                className="inline-flex min-h-12 w-12 shrink-0 select-none items-center justify-center gap-2 rounded-ui bg-ink-800 font-semibold text-steel-100 shadow-raised ring-1 ring-line-strong transition-[transform,background-color] duration-150 ease-out-strong hover:bg-ink-700 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-45 sm:min-h-14 sm:w-auto sm:rounded-[14px] sm:px-6"
+              >
+                <ArrowLeftIcon size={20} aria-hidden="true" />
+                <span className="hidden sm:inline">Terug</span>
+              </button>
+            )}
+
+            <div className="min-w-0 flex-1" aria-live="polite">
+              {summary ? (
+                <div className="min-w-0">
+                  <p className="truncate text-xs text-steel-400 sm:text-sm">
+                    {summary.label}
+                    {summary.detail && <span className="hidden min-[400px]:inline">, {summary.detail}</span>}
+                  </p>
+                  <p
+                    key={summary.cents}
+                    className="figure-swap figures truncate font-display text-xl font-semibold leading-tight tracking-[-0.02em] text-steel-50"
+                  >
+                    {formatEuro(summary.cents)}
+                  </p>
+                </div>
+              ) : (
+                !canContinue &&
+                missing && <p className="truncate text-sm text-steel-400">{missing}</p>
+              )}
+            </div>
+
             <button
               type="button"
               onClick={step === LAST_STEP ? submit : goNext}
               disabled={!canContinue || pending}
-              className={primaryButton}
+              className={`${buttonClass("primary", "md")} shrink-0 sm:min-h-14 sm:rounded-[14px] sm:px-7 sm:text-base`}
             >
-              {pending ? "Even geduld…" : nextLabel}
+              {navPending ? busyLabel : nextLabel}
             </button>
           </div>
         </div>

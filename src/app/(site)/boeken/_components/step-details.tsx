@@ -1,37 +1,47 @@
+import { WarningCircleIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
-import { inputClass } from "@/lib/booking/styles";
+import { fieldErrorClass, hintClass, inputClass, labelClass, stepPanelClass } from "@/lib/booking/styles";
 import { StepHeading } from "./step-heading";
 
 type Customer = { name: string; phone: string; email: string; note: string };
+type Field = keyof Customer;
 
 export function StepDetails({
   customer,
   errors,
   onChange,
+  onBlur,
 }: {
   customer: Customer;
-  errors: Partial<Record<keyof Customer, string>>;
-  onChange: (field: keyof Customer, value: string) => void;
+  errors: Partial<Record<Field, string>>;
+  onChange: (field: Field, value: string) => void;
+  onBlur: (field: Field) => void;
 }) {
+  function describedBy(field: Field, hint?: boolean) {
+    const ids = [hint ? `${field}-hint` : null, errors[field] ? `${field}-error` : null].filter(Boolean);
+    return ids.length > 0 ? ids.join(" ") : undefined;
+  }
+
   return (
     <>
-      <StepHeading title="Je gegevens" text="We gebruiken deze gegevens alleen voor je afspraak." />
+      <StepHeading title="Hoe bereiken we je?" text="Wij gebruiken je gegevens alleen voor deze afspraak." />
 
-      <div className="space-y-5">
-        <Field id="name" label="Naam" error={errors.name}>
+      <div className={`${stepPanelClass} space-y-5`}>
+        <FieldBlock id="name" label="Naam" error={errors.name}>
           <input
             id="name"
             name="name"
             autoComplete="name"
             value={customer.name}
             onChange={(event) => onChange("name", event.target.value)}
+            onBlur={() => onBlur("name")}
             aria-invalid={errors.name !== undefined}
-            aria-describedby={errors.name ? "name-error" : undefined}
+            aria-describedby={describedBy("name")}
             className={inputClass}
           />
-        </Field>
+        </FieldBlock>
 
-        <Field id="phone" label="Telefoonnummer" error={errors.phone}>
+        <FieldBlock id="phone" label="Telefoonnummer" error={errors.phone}>
           <input
             id="phone"
             name="phone"
@@ -40,28 +50,38 @@ export function StepDetails({
             autoComplete="tel"
             value={customer.phone}
             onChange={(event) => onChange("phone", event.target.value)}
+            onBlur={() => onBlur("phone")}
             aria-invalid={errors.phone !== undefined}
-            aria-describedby={errors.phone ? "phone-error" : undefined}
-            className={inputClass}
+            aria-describedby={describedBy("phone")}
+            className={`${inputClass} figures`}
           />
-        </Field>
+        </FieldBlock>
 
-        <Field id="email" label="E-mailadres" error={errors.email}>
+        <FieldBlock id="email" label="E-mailadres" error={errors.email}>
           <input
             id="email"
             name="email"
             type="email"
             inputMode="email"
             autoComplete="email"
+            autoCapitalize="off"
+            spellCheck={false}
             value={customer.email}
             onChange={(event) => onChange("email", event.target.value)}
+            onBlur={() => onBlur("email")}
             aria-invalid={errors.email !== undefined}
-            aria-describedby={errors.email ? "email-error" : undefined}
+            aria-describedby={describedBy("email")}
             className={inputClass}
           />
-        </Field>
+        </FieldBlock>
 
-        <Field id="note" label="Opmerking (optioneel)" error={errors.note}>
+        <FieldBlock
+          id="note"
+          label="Opmerking"
+          optional
+          hint="Bijvoorbeeld waar we kunnen parkeren of bij welke deur we aanbellen."
+          error={errors.note}
+        >
           <textarea
             id="note"
             name="note"
@@ -69,37 +89,48 @@ export function StepDetails({
             maxLength={500}
             value={customer.note}
             onChange={(event) => onChange("note", event.target.value)}
-            placeholder="Bijvoorbeeld: bel even aan bij de achterdeur"
+            onBlur={() => onBlur("note")}
             aria-invalid={errors.note !== undefined}
-            aria-describedby={errors.note ? "note-error" : undefined}
-            className={inputClass}
+            aria-describedby={describedBy("note", true)}
+            className={`${inputClass} resize-y py-3 leading-relaxed`}
           />
-        </Field>
+        </FieldBlock>
       </div>
     </>
   );
 }
 
-function Field({
+function FieldBlock({
   id,
   label,
+  optional = false,
+  hint,
   error,
   children,
 }: {
-  id: string;
+  id: Field;
   label: string;
+  optional?: boolean;
+  hint?: string;
   error?: string;
   children: ReactNode;
 }) {
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-navy-900">
+      <label htmlFor={id} className={labelClass}>
         {label}
+        {optional && <span className="font-normal text-steel-400"> (optioneel)</span>}
       </label>
+      {hint && (
+        <p id={`${id}-hint`} className={`${hintClass} mt-1`}>
+          {hint}
+        </p>
+      )}
       <div className="mt-2">{children}</div>
       {error && (
-        <p id={`${id}-error`} role="alert" className="mt-1.5 text-sm text-red-700">
-          {error}
+        <p id={`${id}-error`} role="alert" className={fieldErrorClass}>
+          <WarningCircleIcon size={18} aria-hidden="true" className="mt-px shrink-0" />
+          <span>{error}</span>
         </p>
       )}
     </div>

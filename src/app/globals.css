@@ -323,3 +323,153 @@ details > summary::-webkit-details-marker {
     scroll-behavior: auto !important;
   }
 }
+
+/* Site sections */
+
+/*
+  Authored illustrations (src/components/site/illustrations.tsx).
+  One 1.5px stroke at every size, flat ink fills, cyan only where the light is.
+*/
+.ill {
+  display: block;
+  width: 100%;
+  height: auto;
+  fill: none;
+  stroke: var(--color-steel-500);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ill * {
+  vector-effect: non-scaling-stroke;
+}
+
+.ill .k {
+  stroke: var(--color-steel-300);
+}
+
+.ill .q {
+  stroke: var(--color-ink-600);
+}
+
+.ill .c {
+  stroke: var(--color-cyan-400);
+}
+
+.ill .n {
+  stroke: none;
+}
+
+.ill .f0 {
+  fill: var(--color-ink-950);
+}
+
+.ill .f9 {
+  fill: var(--color-ink-900);
+}
+
+.ill .f8 {
+  fill: var(--color-ink-800);
+}
+
+.ill .f7 {
+  fill: var(--color-ink-700);
+}
+
+.ill .fs {
+  fill: var(--color-steel-500);
+}
+
+.ill .fk {
+  fill: var(--color-steel-300);
+}
+
+.ill .fc {
+  fill: var(--color-cyan-400);
+}
+
+/* A flat wash of light, for the headlight and the work lamp */
+.ill .fb {
+  fill: rgb(62 197 255 / 0.08);
+  stroke: none;
+}
+
+/* The one gradient: a faint glow behind a lit screen */
+.ill .g0 {
+  stop-color: var(--color-cyan-400);
+  stop-opacity: 0.22;
+}
+
+.ill .g1 {
+  stop-color: var(--color-cyan-400);
+  stop-opacity: 0;
+}
+
+/*
+  Travel fee slider. The track shows the free distance in a tint of the light and fills
+  up to the thumb in cyan. --fill and --free are set inline on the input itself.
+*/
+.km-range {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 2.75rem;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.km-range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 9999px;
+  background:
+    linear-gradient(to right, var(--color-cyan-400) 0 var(--fill, 0%), transparent var(--fill, 0%)),
+    linear-gradient(to right, rgb(62 197 255 / 0.24) 0 var(--free, 0%), var(--color-ink-700) var(--free, 0%));
+}
+
+.km-range::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background:
+    linear-gradient(to right, var(--color-cyan-400) 0 var(--fill, 0%), transparent var(--fill, 0%)),
+    linear-gradient(to right, rgb(62 197 255 / 0.24) 0 var(--free, 0%), var(--color-ink-700) var(--free, 0%));
+}
+
+.km-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  margin-top: -11px;
+  border-radius: 9999px;
+  background: var(--color-cyan-400);
+  border: 5px solid var(--color-ink-950);
+  box-shadow:
+    0 0 0 1.5px var(--color-cyan-400),
+    0 8px 16px -8px rgb(1 4 12 / 0.9);
+  transition: transform 150ms var(--ease-out-strong);
+}
+
+.km-range::-moz-range-thumb {
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: var(--color-cyan-400);
+  border: 5px solid var(--color-ink-950);
+  box-shadow:
+    0 0 0 1.5px var(--color-cyan-400),
+    0 8px 16px -8px rgb(1 4 12 / 0.9);
+  transition: transform 150ms var(--ease-out-strong);
+}
+
+.km-range:active::-webkit-slider-thumb {
+  transform: scale(1.1);
+}
+
+.km-range:active::-moz-range-thumb {
+  transform: scale(1.1);
+}

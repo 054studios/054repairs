@@ -1,10 +1,21 @@
 "use client";
 
+import { WarningCircleIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import type { ActionResult } from "@/lib/action-result";
-import { primaryButton, secondaryButton } from "@/lib/booking/styles";
+import { buttonClass } from "@/lib/booking/styles";
+import { Notice } from "../../boeken/_components/notice";
 import { cancelBookingAction, createPaymentLinkAction } from "../actions";
+
+function ActionError({ message }: { message: string }) {
+  return (
+    <p role="alert" className="mt-3 flex items-start gap-1.5 text-sm leading-snug text-bad">
+      <WarningCircleIcon size={18} aria-hidden="true" className="mt-px shrink-0" />
+      <span>{message}</span>
+    </p>
+  );
+}
 
 export function PayButton({ reference, token, label }: { reference: string; token: string; label: string }) {
   const [pending, startTransition] = useTransition();
@@ -24,23 +35,23 @@ export function PayButton({ reference, token, label }: { reference: string; toke
 
   return (
     <div>
-      <button type="button" onClick={pay} disabled={pending} className={`${primaryButton} sm:w-auto`}>
-        {pending ? "Even geduld…" : label}
+      <button type="button" onClick={pay} disabled={pending} className={`${buttonClass("primary", "lg")} w-full sm:w-auto`}>
+        {pending ? "Betaalpagina openen" : label}
       </button>
-      {error && (
-        <p role="alert" className="mt-3 text-sm text-red-700">
-          {error}
-        </p>
-      )}
+      {error && <ActionError message={error} />}
     </div>
   );
 }
 
+// Inline confirm instead of a modal: the question appears in place, the safe choice gets focus.
 export function CancelBooking({ reference, token }: { reference: string; token: string }) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
   const [result, setResult] = useState<ActionResult | null>(null);
   const [pending, startTransition] = useTransition();
+  // Focus follows the question: to the safe choice when it opens, back to the trigger when it closes.
+  const focusKeep = useRef(false);
+  const focusStart = useRef(false);
 
   function cancel() {
     startTransition(async () => {
@@ -53,49 +64,79 @@ export function CancelBooking({ reference, token }: { reference: string; token: 
     });
   }
 
+  function keep() {
+    focusStart.current = true;
+    setConfirming(false);
+    setResult(null);
+  }
+
+  function ask() {
+    focusKeep.current = true;
+    setConfirming(true);
+  }
+
   if (result?.ok) {
     return (
-      <p role="status" className="text-sm text-emerald-800">
+      <Notice tone="ok" role="status">
         {result.message}
-      </p>
+      </Notice>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div>
       {confirming ? (
-        <>
-          <p className="text-sm text-navy-800">Weet je zeker dat je deze afspraak wilt annuleren?</p>
-          <div className="flex flex-col gap-3 sm:flex-row">
+        <div
+          role="group"
+          aria-labelledby="cancel-question"
+          className="rounded-ui bg-bad/[0.06] p-4 ring-1 ring-bad/30 transition-[opacity,translate] duration-200 ease-out-strong motion-safe:starting:-translate-y-1 starting:opacity-0"
+        >
+          <p id="cancel-question" className="font-semibold text-steel-50">
+            Weet je zeker dat je deze afspraak wilt annuleren?
+          </p>
+          <p className="mt-1 text-[0.9375rem] text-steel-300">Dit kun je niet terugdraaien.</p>
+          <div className="mt-4 flex flex-col gap-2.5 sm:flex-row">
             <button
               type="button"
               onClick={cancel}
               disabled={pending}
-              className="inline-flex w-full items-center justify-center rounded-xl bg-red-700 px-5 py-3.5 text-base font-semibold text-white transition hover:bg-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700 disabled:opacity-60 sm:w-auto"
+              className={`${buttonClass("danger", "md")} w-full sm:w-auto`}
             >
-              {pending ? "Even geduld…" : "Ja, annuleer"}
+              {pending ? "Bezig met annuleren" : "Ja, annuleer afspraak"}
             </button>
             <button
+              ref={(element) => {
+                if (element && focusKeep.current) {
+                  focusKeep.current = false;
+                  element.focus();
+                }
+              }}
               type="button"
-              onClick={() => setConfirming(false)}
+              onClick={keep}
               disabled={pending}
-              className={`${secondaryButton} sm:w-auto`}
+              className={`${buttonClass("secondary", "md")} w-full sm:w-auto`}
             >
-              Nee, houd de afspraak
+              Nee, houd afspraak
             </button>
           </div>
-        </>
+        </div>
       ) : (
-        <button type="button" onClick={() => setConfirming(true)} className={`${secondaryButton} sm:w-auto`}>
-          Afspraak annuleren
+        <button
+          ref={(element) => {
+            if (element && focusStart.current) {
+              focusStart.current = false;
+              element.focus();
+            }
+          }}
+          type="button"
+          onClick={ask}
+          className={`${buttonClass("danger", "md")} w-full sm:w-auto`}
+        >
+          Annuleer afspraak
         </button>
       )}
 
-      {result && !result.ok && (
-        <p role="alert" className="text-sm text-red-700">
-          {result.message}
-        </p>
-      )}
+      {result && !result.ok && <ActionError message={result.message} />}
     </div>
   );
 }

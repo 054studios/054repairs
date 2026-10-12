@@ -1,18 +1,48 @@
-// Shared class strings for the booking pages. Brand colors: navy tokens from globals.css.
+// Class strings for the booking flow and the status page.
+// Everything maps onto the shared design system in src/components/ui/styles.ts,
+// so the wizard uses the same buttons, fields and option cards as the rest of the site.
+import {
+  buttonClass,
+  chipClass,
+  hintClass,
+  inputClass,
+  insetClass,
+  labelClass,
+  optionClass,
+  panelClass,
+  selectClass,
+} from "@/components/ui/styles";
 
-export const primaryButton =
-  "inline-flex w-full items-center justify-center rounded-xl bg-navy-900 px-5 py-3.5 text-base font-semibold text-white shadow-sm transition hover:bg-navy-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-600 disabled:cursor-not-allowed disabled:bg-navy-200 disabled:text-navy-600";
+export { buttonClass, chipClass, hintClass, inputClass, insetClass, labelClass, optionClass, panelClass, selectClass };
 
-export const secondaryButton =
-  "inline-flex w-full items-center justify-center rounded-xl bg-white px-5 py-3.5 text-base font-semibold text-navy-900 ring-1 ring-navy-200 transition hover:bg-navy-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-600 disabled:cursor-not-allowed disabled:opacity-50";
+// The surface every step and status block sits on.
+export const stepPanelClass = `${panelClass} p-4 sm:p-6`;
 
-export const inputClass =
-  "w-full rounded-xl border border-navy-200 bg-white px-4 py-3 text-base text-navy-950 outline-none transition placeholder:text-navy-400 focus:border-navy-600 focus:ring-2 focus:ring-navy-600/20 aria-[invalid=true]:border-red-600";
+// Older names, kept so any remaining import renders in the new world.
+export const cardClass = stepPanelClass;
+export const primaryButton = `${buttonClass("primary", "lg")} w-full`;
+export const secondaryButton = `${buttonClass("secondary", "lg")} w-full`;
 
-export const cardClass = "rounded-2xl bg-white p-5 shadow-sm ring-1 ring-navy-100";
+// Section title inside a panel.
+export const panelTitleClass = "font-display text-lg font-semibold tracking-[-0.02em] text-steel-50";
 
-// Selectable card. Put the sr-only input with class "peer" right before it.
-export const optionClass =
-  "block rounded-2xl bg-white p-4 ring-1 ring-navy-200 transition peer-checked:bg-navy-50 peer-checked:ring-2 peer-checked:ring-navy-900 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-navy-600 peer-disabled:opacity-50";
+// Buttons that toggle a choice without a native input (days, times).
+// Selected: the same cyan ring as a checked option card.
+export function choiceClass(selected: boolean) {
+  return (
+    "select-none rounded-ui transition-[background-color,box-shadow,color,transform] duration-150 ease-out-strong active:scale-[0.97] " +
+    (selected
+      ? "bg-ink-700 text-steel-50 ring-2 ring-cyan-400"
+      : "bg-ink-850 text-steel-100 ring-1 ring-line-strong hover:bg-ink-800")
+  );
+}
 
-export const eyebrowClass = "text-sm font-medium text-navy-600";
+// Loading placeholder. animate-pulse only changes opacity; reduced motion stops it globally.
+export const skeletonClass = "animate-pulse rounded-ui bg-ink-800";
+
+// Inline field error under an input.
+export const fieldErrorClass = "mt-2 flex items-start gap-1.5 text-sm leading-snug text-bad";
+
+// Label and value rows in summaries and receipts.
+export const rowLabelClass = "text-sm text-steel-400";
+export const rowValueClass = "text-base text-steel-100";
