@@ -1,68 +1,146 @@
 @import "tailwindcss";
 
-/* Brand: donkerblauw. The navy scale is shared by the public site and the admin dashboard. */
+/*
+  054repairs design tokens. World: night drive.
+  A deep navy ground, raised ink panels, steel text and one cyan light:
+  the glow of a repaired screen and the route on a navigation display.
+*/
 @theme {
-  --color-navy-50: #f3f6fb;
-  --color-navy-100: #e3eaf4;
-  --color-navy-200: #c5d3e6;
-  --color-navy-300: #9fb4d2;
-  --color-navy-400: #7592ba;
-  --color-navy-500: #5377a3;
-  --color-navy-600: #2f5c94;
-  --color-navy-700: #244a7a;
-  --color-navy-800: #1b3a63;
-  --color-navy-900: #132b4d;
-  --color-navy-950: #0b1b33;
+  /* Ground and surfaces, darkest first */
+  --color-ink-950: #060c18;
+  --color-ink-900: #0a1324;
+  --color-ink-850: #0d182c;
+  --color-ink-800: #0f1b31;
+  --color-ink-700: #172744;
+  --color-ink-600: #22365a;
 
-  /* The one accent. Used on dark surfaces and in notes, never for body text. */
-  --color-accent: #f2b84b;
-  --color-accent-strong: #f7c564;
-  --color-accent-soft: #fdf3dc;
+  /* Text */
+  --color-steel-50: #f4f8fd;
+  --color-steel-100: #eaf1fb;
+  --color-steel-300: #c9d6e8;
+  --color-steel-400: #a3b4cc;
+  --color-steel-500: #7c91b0;
 
-  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  /* The one light */
+  --color-cyan-200: #bdeeff;
+  --color-cyan-300: #8edfff;
+  --color-cyan-400: #3ec5ff;
+  --color-cyan-500: #19a9e6;
+  --color-cyan-600: #0c86bb;
+  --color-cyan-ink: #031420;
+
+  /* Hairlines on dark */
+  --color-line: rgb(150 185 240 / 0.12);
+  --color-line-strong: rgb(150 185 240 / 0.22);
+
+  /* States, only where they carry meaning */
+  --color-ok: #3dd68c;
+  --color-warn: #f5b544;
+  --color-bad: #ff7a7a;
+
+  /* Legacy names kept so nothing renders unstyled during the migration */
+  --color-accent: #3ec5ff;
+  --color-accent-strong: #8edfff;
+
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
+
+  /* Radius scales with hierarchy: controls, panels, the hero panel */
+  --radius-ui: 10px;
+  --radius-panel: 18px;
+  --radius-hero: 28px;
+
+  /* Strong curves. Enter with ease-out, move with ease-in-out. */
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* Tinted, offset depth. An inner top highlight plus a soft drop. */
+  --shadow-panel: inset 0 1px 0 0 rgb(255 255 255 / 0.05), 0 24px 48px -28px rgb(1 4 12 / 0.95);
+  --shadow-raised: inset 0 1px 0 0 rgb(255 255 255 / 0.07), 0 18px 36px -18px rgb(1 4 12 / 0.9);
+  --shadow-cta: 0 10px 24px -12px rgb(62 197 255 / 0.55);
 }
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 html {
-  scroll-padding-top: 5rem;
+  scroll-padding-top: 5.5rem;
+  background: var(--color-ink-950);
 }
 
 body {
-  background: var(--color-navy-50);
-  color: var(--color-navy-950);
+  background: var(--color-ink-950);
+  color: var(--color-steel-100);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  caret-color: var(--color-cyan-400);
 }
 
 h1,
 h2,
 h3 {
+  font-family: var(--font-display);
   text-wrap: balance;
+  letter-spacing: -0.025em;
 }
 
 p {
   text-wrap: pretty;
 }
 
-/* Keyboard focus is always visible. On dark surfaces the accent takes over. */
+/* Browser surfaces carry the design too */
+::selection {
+  background: var(--color-cyan-400);
+  color: var(--color-cyan-ink);
+}
+
+* {
+  scrollbar-color: var(--color-ink-600) transparent;
+  scrollbar-width: thin;
+}
+
 :focus-visible {
-  outline: 3px solid var(--color-navy-600);
+  outline: 2px solid var(--color-cyan-400);
   outline-offset: 3px;
-  border-radius: 0.5rem;
+  border-radius: 6px;
 }
 
-.on-dark :focus-visible {
-  outline-color: var(--color-accent);
+a {
+  text-underline-offset: 4px;
 }
 
-/* One orchestrated entrance on the home hero. Transform and opacity only. */
-@keyframes rise {
+/* Prices, km and times line up */
+.figures {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* A quiet light at the top of the page. Static, painted once, no animation. */
+.night-sky {
+  background:
+    radial-gradient(60rem 28rem at 78% -6rem, rgb(62 197 255 / 0.10), transparent 70%),
+    radial-gradient(40rem 22rem at 6% 8rem, rgb(34 54 90 / 0.55), transparent 72%),
+    var(--color-ink-950);
+}
+
+/*
+  The one authored entrance: the hero headline and price check settle in on load.
+  Content is visible by default; the animation only plays when motion is allowed.
+*/
+@media (prefers-reduced-motion: no-preference) {
+  .settle {
+    animation: settle 700ms var(--ease-out-strong) both;
+    animation-delay: calc(var(--i, 0) * 70ms);
+  }
+}
+
+@keyframes settle {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(14px);
   }
   to {
     opacity: 1;
@@ -70,16 +148,110 @@ p {
   }
 }
 
-.rise {
-  animation: rise 600ms cubic-bezier(0.23, 1, 0.32, 1) both;
+/*
+  Signature: the route rail. A cyan line that draws itself as the visitor scrolls,
+  with stops that light up as they pass. Scroll-driven CSS only, so it runs off the
+  main thread. Browsers without scroll timelines get the finished, static line.
+*/
+.route-rail {
+  position: relative;
 }
 
-.rise-2 {
-  animation-delay: 80ms;
+.route-rail::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: var(--rail-x, 1.125rem);
+  width: 2px;
+  border-radius: 2px;
+  background: var(--color-line-strong);
 }
 
-.rise-3 {
-  animation-delay: 160ms;
+.route-rail::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: var(--rail-x, 1.125rem);
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(var(--color-cyan-300), var(--color-cyan-400) 40%, var(--color-cyan-500));
+  transform-origin: top;
+}
+
+.route-stop {
+  position: relative;
+}
+
+.route-stop-dot {
+  position: absolute;
+  inset-inline-start: calc(var(--rail-x, 1.125rem) - 7px);
+  top: 0.35rem;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: var(--color-ink-950);
+  border: 2px solid var(--color-cyan-400);
+  box-shadow: 0 0 0 4px var(--color-ink-950);
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .route-rail::after {
+      animation: rail-draw linear both;
+      animation-timeline: view();
+      animation-range: entry 15% cover 75%;
+    }
+
+    .route-stop-dot {
+      animation: stop-light linear both;
+      animation-timeline: view();
+      animation-range: entry 30% cover 45%;
+    }
+  }
+}
+
+@keyframes rail-draw {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes stop-light {
+  from {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Horizontal route used as a progress bar (booking steps) */
+.route-progress-fill {
+  transform-origin: left;
+  transition: transform 400ms var(--ease-in-out-strong);
+}
+
+/* Price changes: the new figure slides up a few pixels. Feedback, under 250ms. */
+@media (prefers-reduced-motion: no-preference) {
+  .figure-swap {
+    animation: figure-swap 220ms var(--ease-out-strong) both;
+  }
+}
+
+@keyframes figure-swap {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* FAQ: the plus turns into a minus, and the answer fades in when it opens. */
@@ -90,9 +262,9 @@ p {
 .faq-plus-h,
 .faq-plus-v {
   position: absolute;
-  background: var(--color-navy-900);
+  background: var(--color-cyan-400);
   border-radius: 9999px;
-  transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  transition: transform 200ms var(--ease-out-strong);
 }
 
 .faq-plus-h {
@@ -115,6 +287,12 @@ details[open] > summary .faq-plus-v {
   transform: scaleY(0);
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  details[open] > .faq-answer {
+    animation: answer-in 220ms var(--ease-out-strong) both;
+  }
+}
+
 @keyframes answer-in {
   from {
     opacity: 0;
@@ -126,10 +304,6 @@ details[open] > summary .faq-plus-v {
   }
 }
 
-details[open] > .faq-answer {
-  animation: answer-in 220ms cubic-bezier(0.23, 1, 0.32, 1) both;
-}
-
 details > summary {
   list-style: none;
 }
@@ -138,6 +312,7 @@ details > summary::-webkit-details-marker {
   display: none;
 }
 
+/* Reduced motion: keep opacity and colour, drop movement */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

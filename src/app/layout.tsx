@@ -1,18 +1,28 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope } from "next/font/google";
+import { Bricolage_Grotesque, Inter_Tight } from "next/font/google";
 import { siteUrl } from "@/components/site/site-url";
 import "./globals.css";
 
-const manrope = Manrope({
+// Headlines. Variable font, so one file covers every weight we use.
+const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
-  variable: "--font-manrope",
+  variable: "--font-bricolage",
+  display: "swap",
+});
+
+// Running text and interface.
+const interTight = Inter_Tight({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-inter-tight",
   display: "swap",
 });
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
-  title: "054repairs | Telefoonreparatie aan huis",
-  description: "Boek online een telefoonreparatie. Wij halen je toestel op en brengen het terug.",
+  title: "054repairs | iPhone-reparatie aan huis",
+  description:
+    "Boek online een iPhone-reparatie. Wij rijden naar je toe, repareren ter plekke in de bus en je hebt je telefoon terug zodra de reparatie klaar is.",
   openGraph: {
     siteName: "054repairs",
     locale: "nl_NL",
@@ -21,13 +31,14 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b1b33",
+  themeColor: "#060c18",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="nl" className={`${manrope.variable} h-full antialiased`}>
-      <body className="min-h-dvh font-sans">{children}</body>
+    <html lang="nl" className={`${bricolage.variable} ${interTight.variable} h-full antialiased`}>
+      <body className="min-h-dvh bg-ink-950 font-sans text-steel-100">{children}</body>
     </html>
   );
 }
