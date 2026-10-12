@@ -8,6 +8,10 @@ export const instant = false;
 
 const navItems = [
   { href: "/admin", label: "Overzicht" },
+  { href: "/admin/catalogus", label: "Catalogus" },
+  { href: "/admin/voorrijkosten", label: "Voorrijkosten" },
+  { href: "/admin/planning", label: "Planning" },
+  { href: "/admin/betalingen", label: "Betalingen" },
   { href: "/admin/instellingen", label: "Instellingen" },
 ];
 

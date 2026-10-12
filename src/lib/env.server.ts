@@ -7,7 +7,16 @@ const serverSchema = z.object({
   APP_ENCRYPTION_KEY: z.string().min(32),
 });
 
-export const serverEnv = serverSchema.parse({
-  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
-  APP_ENCRYPTION_KEY: process.env.APP_ENCRYPTION_KEY,
-});
+// Read lazily, so the admin still loads while these are not configured yet.
+export function getServerEnv() {
+  const parsed = serverSchema.safeParse({
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    APP_ENCRYPTION_KEY: process.env.APP_ENCRYPTION_KEY,
+  });
+
+  if (!parsed.success) {
+    return null;
+  }
+
+  return parsed.data;
+}
