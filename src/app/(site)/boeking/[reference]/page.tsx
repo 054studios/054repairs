@@ -25,6 +25,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Notice } from "../../boeken/_components/notice";
 import { AmountRow, Receipt } from "../../boeken/_components/receipt";
 import { CancelBooking, PayButton } from "../_components/booking-actions";
+import { FocusHeadingAfterCancel } from "../_components/focus-after-cancel";
 import { StatusRoute } from "../_components/status-route";
 
 // Shows one booking. Access is only granted with the token from the link.
@@ -103,7 +104,10 @@ async function BookingStatusView({ params, searchParams }: StatusPageProps) {
   return (
     <div className="space-y-5">
       <header>
-        <h1 className={headingClass}>{APPOINTMENT_STATUS_HEADLINES[booking.status] ?? "Je afspraak"}</h1>
+        <h1 className={`${headingClass} outline-none`} tabIndex={-1} data-status-heading>
+          {APPOINTMENT_STATUS_HEADLINES[booking.status] ?? "Je afspraak"}
+        </h1>
+        <FocusHeadingAfterCancel key={booking.status} reference={booking.reference} />
         <p className="mt-3 text-base text-steel-400">
           Referentie <span className="figures font-medium text-steel-100">{booking.reference}</span>
         </p>

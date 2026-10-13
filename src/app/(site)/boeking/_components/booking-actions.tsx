@@ -7,6 +7,7 @@ import type { ActionResult } from "@/lib/action-result";
 import { buttonClass } from "@/lib/booking/styles";
 import { Notice } from "../../boeken/_components/notice";
 import { cancelBookingAction, createPaymentLinkAction } from "../actions";
+import { CANCELLED_FLAG } from "./focus-after-cancel";
 
 function ActionError({ message }: { message: string }) {
   return (
@@ -59,6 +60,11 @@ export function CancelBooking({ reference, token }: { reference: string; token: 
       setResult(outcome);
 
       if (outcome.ok) {
+        try {
+          window.sessionStorage.setItem(CANCELLED_FLAG, reference);
+        } catch {
+          // Without storage the focus stays where it is; the cancellation still goes through.
+        }
         router.refresh();
       }
     });

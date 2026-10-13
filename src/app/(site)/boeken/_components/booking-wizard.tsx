@@ -604,6 +604,9 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
           <motion.div
             key={step}
             ref={stepRef}
+            // On phones the sticky action bar covers the bottom of the screen. Leave room above it,
+            // so a field the browser scrolls into view (or focuses after validation) is never hidden.
+            className="max-md:[&_:is(input,select,textarea,button,[role=radio],[role=checkbox],[role=option])]:scroll-mb-40"
             custom={state.direction}
             variants={stepVariants(reduceMotion)}
             initial="enter"

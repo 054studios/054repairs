@@ -142,7 +142,7 @@ function PriceCheckForm({
         <fieldset>
           <legend className={labelClass}>Kwaliteit</legend>
           <div
-            className="relative mt-1.5 grid rounded-ui bg-ink-850 p-1 ring-1 ring-line-strong"
+            className="relative mt-1.5 grid rounded-ui bg-ink-950/70 p-1"
             style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
           >
             <span

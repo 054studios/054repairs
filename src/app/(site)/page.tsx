@@ -49,10 +49,10 @@ function Hero({ priced, settings }: { priced: PricedCatalogue | null; settings: 
     <section aria-labelledby="hero-titel" className="night-sky">
       <Container className="grid gap-7 pb-16 pt-7 sm:pt-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:items-center lg:gap-14 lg:pb-28 lg:pt-20">
         <div>
+          {/* No entrance animation on the headline: it is the largest paint and must show at once. */}
           <h1
             id="hero-titel"
-            className={`settle ${displayClass} max-w-[14ch] text-[clamp(2.5rem,6.2vw,5rem)] leading-[0.98] tracking-[-0.035em]`}
-            style={stagger(0)}
+            className={`${displayClass} max-w-[14ch] text-[clamp(2.5rem,6.2vw,5rem)] leading-[0.98] tracking-[-0.035em]`}
           >
             <span className="whitespace-nowrap">iPhone-reparatie</span> voor de deur.
           </h1>

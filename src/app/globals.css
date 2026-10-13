@@ -61,55 +61,68 @@
   --shadow-cta: 0 10px 24px -12px rgb(62 197 255 / 0.55);
 }
 
-:root {
-  color-scheme: dark;
-}
+/*
+  Element defaults live in the base layer, so Tailwind utilities on an element
+  always win over them (unlayered CSS would beat every utility in Tailwind v4).
+*/
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
 
-html {
-  scroll-padding-top: 5.5rem;
-  background: var(--color-ink-950);
-}
+  html {
+    scroll-padding-top: 5.5rem;
+    background: var(--color-ink-950);
+  }
 
-body {
-  background: var(--color-ink-950);
-  color: var(--color-steel-100);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  caret-color: var(--color-cyan-400);
-}
+  body {
+    background: var(--color-ink-950);
+    color: var(--color-steel-100);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    caret-color: var(--color-cyan-400);
+  }
 
-h1,
-h2,
-h3 {
-  font-family: var(--font-display);
-  text-wrap: balance;
-  letter-spacing: -0.025em;
-}
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+    letter-spacing: -0.025em;
+  }
 
-p {
-  text-wrap: pretty;
-}
+  p {
+    text-wrap: pretty;
+  }
 
-/* Browser surfaces carry the design too */
-::selection {
-  background: var(--color-cyan-400);
-  color: var(--color-cyan-ink);
-}
+  /* Browser surfaces carry the design too */
+  ::selection {
+    background: var(--color-cyan-400);
+    color: var(--color-cyan-ink);
+  }
 
-* {
-  scrollbar-color: var(--color-ink-600) transparent;
-  scrollbar-width: thin;
-}
+  * {
+    scrollbar-color: var(--color-ink-600) transparent;
+    scrollbar-width: thin;
+  }
 
-:focus-visible {
-  outline: 2px solid var(--color-cyan-400);
-  outline-offset: 3px;
-  border-radius: 6px;
-}
+  :focus-visible {
+    outline: 2px solid var(--color-cyan-400);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
 
-a {
-  text-underline-offset: 4px;
+  a {
+    text-underline-offset: 4px;
+  }
+
+  /* Form controls show the cyan ring from their own classes, not a second outline */
+  input:not([type="checkbox"], [type="radio"], [type="range"]):focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+  }
 }
 
 /* Prices, km and times line up */
