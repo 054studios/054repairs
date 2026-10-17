@@ -152,21 +152,18 @@ function Hero() {
             <HomePriceCheck />
           </Suspense>
         </div>
-        <figure className="relative overflow-hidden rounded-panel bg-ink-900 ring-1 ring-line lg:col-start-1 lg:row-start-2">
+        <figure className="relative lg:col-start-1 lg:row-start-2">
           <div className="relative aspect-[3/2] sm:aspect-[2/1] lg:aspect-[16/9]">
             <Image
               src={phoneRepair}
-              alt="Illustratie van een smartphone met een losgemaakt scherm en precisiegereedschap."
+              alt="Smartphone met losgemaakt scherm en precisiegereedschap."
               fill
               sizes="(min-width: 1216px) 680px, (min-width: 1024px) calc(100vw - 33rem), (min-width: 640px) calc(100vw - 3rem), calc(100vw - 2rem)"
               placeholder="blur"
               loading="eager"
-              className="object-cover"
+              className="landing-visual object-cover"
             />
           </div>
-          <figcaption className="absolute bottom-3 right-3 rounded-full border border-white/10 bg-ink-950/80 px-2.5 py-1 text-[0.6875rem] text-steel-300 backdrop-blur-sm">
-            Illustratie
-          </figcaption>
         </figure>
       </Container>
     </section>
@@ -290,20 +287,14 @@ function TravelSection({ settings }: { settings: PublicSettings | null }) {
             </div>
           ) : null}
         </div>
-        <figure className="min-w-0 overflow-hidden rounded-hero bg-ink-900 ring-1 ring-line">
+        <figure className="relative min-w-0">
           <Image
             src={repairAtHome}
-            alt="Illustratie van een gereedschapskoffer en smartphone bij de voordeur van een woning."
+            alt="Een smartphone wordt met precisiegereedschap gerepareerd."
             sizes="(min-width: 1216px) 480px, (min-width: 1024px) 42vw, (min-width: 640px) calc(100vw - 3rem), calc(100vw - 2rem)"
             placeholder="blur"
-            className="aspect-[3/2] w-full object-cover lg:aspect-[4/5]"
+            className="landing-visual aspect-[4/3] w-full object-cover lg:aspect-[4/5]"
           />
-          <figcaption className="flex items-center justify-between gap-3 border-t border-line px-5 py-4">
-            <span className="text-sm font-medium text-steel-100">
-              Wij komen naar jou
-            </span>
-            <span className="text-xs text-steel-500">Illustratie</span>
-          </figcaption>
         </figure>
       </Container>
     </section>

@@ -543,3 +543,9 @@ html:has(:focus-visible) :is(.page-enter, .table-arrive, .figure-swap) { animati
   .admin-content { scroll-margin-top: calc(6rem + env(safe-area-inset-top)); }
   .admin-content :is(input, select, textarea, section[id]) { scroll-margin-top: calc(6rem + env(safe-area-inset-top)); scroll-margin-bottom: 7rem; }
 }
+
+/* Soft edges let landing photography blend into the navy page ground. */
+.landing-visual {
+  mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent), linear-gradient(to bottom, transparent, #000 8%, #000 88%, transparent);
+  mask-composite: intersect;
+}
