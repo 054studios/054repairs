@@ -1,3 +1,4 @@
+import { RealWork } from "@/components/site/real-work";
 import Link from "next/link";
 import { pageMetadata } from "@/components/site/seo";
 import { repairPages } from "@/components/site/repair-content";
@@ -111,6 +112,7 @@ async function HomeSections() {
       <TravelSection settings={settings} />
       <PricePreview table={priced ? fromPriceTable(priced) : null} />
       <PaymentSection settings={settings} />
+      <RealWork />
       <FaqSection items={faq} />
       <ClosingCta title="Jij kiest het moment. Wij rijden naar je toe." />
     </>
@@ -134,8 +136,8 @@ function Hero() {
             className="settle mt-4 max-w-[38ch] text-[1.0625rem] leading-relaxed text-steel-300 sm:mt-6 sm:text-xl"
             style={stagger(1)}
           >
-            Wij rijden naar je toe en repareren je iPhone ter plekke in onze
-            bus. Zodra de reparatie klaar is, heb je hem terug.
+            Wij rijden naar je toe en repareren je iPhone op locatie. Zodra de
+            reparatie klaar is, heb je hem terug.
           </p>
         </div>
 
@@ -178,8 +180,8 @@ function RouteSection({
       title: "Wij rijden naar je toe",
       body: (
         <p>
-          Je geeft je adres op. Op het afgesproken tijdstip staan we met de bus
-          bij je voor de deur.
+          Je geeft je adres op. Op het afgesproken tijdstip zijn we bij jou voor
+          de deur.
         </p>
       ),
       fact: travel
@@ -190,11 +192,11 @@ function RouteSection({
     },
     {
       scene: "repareren",
-      title: "Reparatie in de bus",
+      title: "Reparatie op locatie",
       body: (
         <p>
-          We repareren je iPhone ter plekke, in onze bus. Hoe lang dat duurt,
-          hangt af van de reparatie en zie je al bij de prijs.
+          We repareren je iPhone op locatie. Hoe lang dat duurt, hangt af van de
+          reparatie en zie je al bij de prijs.
         </p>
       ),
       fact: range

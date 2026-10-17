@@ -12,7 +12,7 @@ export default function AboutPage() {
     <>
       <PageHeader
         title="De reparatie komt naar jou."
-        lead="054repairs is een mobiele reparatieservice voor iPhones. Wij rijden naar je toe en repareren je toestel ter plekke in onze bus."
+        lead="054repairs is een mobiele reparatieservice voor iPhones. Wij rijden naar je toe en repareren je toestel op locatie."
       />
       <Container className="grid gap-10 pb-20 md:grid-cols-2">
         <section>

@@ -11,7 +11,12 @@ import { BookingError, measureTravelKm } from "@/lib/booking/distance";
 import { addDays, amsterdamDay } from "@/lib/booking/format";
 import { bookingStatusPath } from "@/lib/booking/routing";
 import { buildTravelQuote } from "@/lib/booking/pricing";
-import { bookingCreatedSchema, bookingPayloadSchema, idSchema, type BookingPayload } from "@/lib/booking/schema";
+import {
+  bookingCreatedSchema,
+  bookingPayloadSchema,
+  idSchema,
+  type BookingPayload,
+} from "@/lib/booking/schema";
 import type {
   AddressSuggestion,
   DayAvailability,
@@ -19,13 +24,19 @@ import type {
   Result,
   TravelQuote,
 } from "@/lib/booking/types";
-import { createMolliePaymentForAppointment, isMollieConfigured } from "@/lib/payments/mollie";
+import {
+  createMolliePaymentForAppointment,
+  isMollieConfigured,
+} from "@/lib/payments/mollie";
 import { createClient } from "@/lib/supabase/server";
 
 const GENERIC_ERROR = "Er ging iets mis. Probeer het opnieuw.";
 const BOOKING_UNAVAILABLE = "Boeken is tijdelijk niet beschikbaar.";
 
-function failure<T extends object = object>(message: string, code?: "slot_taken"): Result<T> {
+function failure<T extends object = object>(
+  message: string,
+  code?: "slot_taken",
+): Result<T> {
   return { ok: false, message, code };
 }
 
@@ -44,7 +55,9 @@ function mollieReady(): Promise<boolean> {
 }
 
 // Address suggestions while typing. Needs at least four characters.
-export async function searchAddress(query: string): Promise<Result<{ suggestions: AddressSuggestion[] }>> {
+export async function searchAddress(
+  query: string,
+): Promise<Result<{ suggestions: AddressSuggestion[] }>> {
   const parsed = z.string().trim().min(4).max(100).safeParse(query);
 
   if (!parsed.success) {
@@ -59,9 +72,15 @@ export async function searchAddress(query: string): Promise<Result<{ suggestions
 }
 
 // Travel fee preview for a picked address. The same calculation runs again on booking.
-export async function calculateTravel(lat: number, lng: number): Promise<Result<{ quote: TravelQuote }>> {
+export async function calculateTravel(
+  lat: number,
+  lng: number,
+): Promise<Result<{ quote: TravelQuote }>> {
   const point = z
-    .object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) })
+    .object({
+      lat: z.number().min(-90).max(90),
+      lng: z.number().min(-180).max(180),
+    })
     .safeParse({ lat, lng });
 
   if (!point.success) {
@@ -84,7 +103,9 @@ export async function calculateTravel(lat: number, lng: number): Promise<Result<
 }
 
 // Priced repair combinations for the chosen model.
-export async function getModelRepairOptions(modelId: string): Promise<Result<{ options: RepairOption[] }>> {
+export async function getModelRepairOptions(
+  modelId: string,
+): Promise<Result<{ options: RepairOption[] }>> {
   const parsed = idSchema.safeParse(modelId);
 
   if (!parsed.success) {
@@ -96,7 +117,9 @@ export async function getModelRepairOptions(modelId: string): Promise<Result<{ o
     const options = await loadModelOptions(supabase, parsed.data);
 
     if (!options) {
-      return failure("De reparaties konden niet worden geladen. Probeer het opnieuw.");
+      return failure(
+        "De reparaties konden niet worden geladen. Probeer het opnieuw.",
+      );
     }
 
     return { ok: true, options };
@@ -105,12 +128,50 @@ export async function getModelRepairOptions(modelId: string): Promise<Result<{ o
   }
 }
 
+async function requestSlots(
+  db: Awaited<ReturnType<typeof createClient>>,
+  day: string,
+  duration: number,
+  buffer: number,
+  point?: { lat: number; lng: number },
+) {
+  if (point) {
+    if (
+      !z
+        .object({
+          lat: z.number().min(-90).max(90),
+          lng: z.number().min(-180).max(180),
+        })
+        .safeParse(point).success
+    )
+      return { data: null, error: { message: "Ongeldig adres" } };
+    const result = await db.rpc("available_route_slots", {
+      p_day: day,
+      p_duration: duration,
+      p_lat: point.lat,
+      p_lng: point.lng,
+    });
+    if (!result.error || !["PGRST202", "42883"].includes(result.error.code))
+      return result;
+  }
+  return db.rpc("available_slots", {
+    p_day: day,
+    p_duration_minutes: duration,
+    p_buffer_minutes: buffer,
+  });
+}
+
 // The next 60 days (Amsterdam), each marked open when at least one free start time exists.
-export async function getAvailableDays(durationMinutes: number): Promise<Result<{ days: DayAvailability[] }>> {
+export async function getAvailableDays(
+  durationMinutes: number,
+  point?: { lat: number; lng: number },
+): Promise<Result<{ days: DayAvailability[] }>> {
   const duration = z.number().int().min(1).max(480).safeParse(durationMinutes);
 
   if (!duration.success) {
-    return failure("De reparatietijd klopt niet. Ga terug en kies je reparatie opnieuw.");
+    return failure(
+      "De reparatietijd klopt niet. Ga terug en kies je reparatie opnieuw.",
+    );
   }
 
   try {
@@ -122,7 +183,9 @@ export async function getAvailableDays(durationMinutes: number): Promise<Result<
     }
 
     const today = amsterdamDay(new Date());
-    const dates = Array.from({ length: CALENDAR_DAYS }, (_, index) => addDays(today, index));
+    const dates = Array.from({ length: CALENDAR_DAYS }, (_, index) =>
+      addDays(today, index),
+    );
     const open = new Set<string>();
 
     // Chunks of ten keep the number of parallel requests low.
@@ -130,29 +193,42 @@ export async function getAvailableDays(durationMinutes: number): Promise<Result<
       const chunk = dates.slice(start, start + 10);
       const results = await Promise.all(
         chunk.map((day) =>
-          supabase.rpc("available_slots", {
-            p_day: day,
-            p_duration_minutes: duration.data,
-            p_buffer_minutes: settings.travelBufferMinutes,
-          }),
+          requestSlots(
+            supabase,
+            day,
+            duration.data,
+            settings.travelBufferMinutes,
+            point,
+          ),
         ),
       );
 
       results.forEach((result, index) => {
-        if (!result.error && Array.isArray(result.data) && result.data.length > 0) {
+        if (
+          !result.error &&
+          Array.isArray(result.data) &&
+          result.data.length > 0
+        ) {
           open.add(chunk[index]);
         }
       });
     }
 
-    return { ok: true, days: dates.map((date) => ({ date, open: open.has(date) })) };
+    return {
+      ok: true,
+      days: dates.map((date) => ({ date, open: open.has(date) })),
+    };
   } catch (error) {
     return errorResult(error);
   }
 }
 
 // Free start times for one day, in UTC ISO strings. The page shows them in Amsterdam time.
-export async function getSlots(dayIso: string, durationMinutes: number): Promise<Result<{ slots: string[] }>> {
+export async function getSlots(
+  dayIso: string,
+  durationMinutes: number,
+  point?: { lat: number; lng: number },
+): Promise<Result<{ slots: string[] }>> {
   const input = z
     .object({
       day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -167,7 +243,10 @@ export async function getSlots(dayIso: string, durationMinutes: number): Promise
   try {
     const today = amsterdamDay(new Date());
 
-    if (input.data.day < today || input.data.day > addDays(today, CALENDAR_DAYS - 1)) {
+    if (
+      input.data.day < today ||
+      input.data.day > addDays(today, CALENDAR_DAYS - 1)
+    ) {
       return failure("Deze dag kun je niet kiezen.");
     }
 
@@ -178,20 +257,26 @@ export async function getSlots(dayIso: string, durationMinutes: number): Promise
       return failure(BOOKING_UNAVAILABLE);
     }
 
-    const { data, error } = await supabase.rpc("available_slots", {
-      p_day: input.data.day,
-      p_duration_minutes: input.data.duration,
-      p_buffer_minutes: settings.travelBufferMinutes,
-    });
+    const { data, error } = await requestSlots(
+      supabase,
+      input.data.day,
+      input.data.duration,
+      settings.travelBufferMinutes,
+      point,
+    );
 
     if (error) {
-      return failure("De tijden konden niet worden geladen. Probeer het opnieuw.");
+      return failure(
+        "De tijden konden niet worden geladen. Probeer het opnieuw.",
+      );
     }
 
     const rows = z.array(z.object({ slot_start: z.string() })).safeParse(data);
 
     if (!rows.success) {
-      return failure("De tijden konden niet worden geladen. Probeer het opnieuw.");
+      return failure(
+        "De tijden konden niet worden geladen. Probeer het opnieuw.",
+      );
     }
 
     const slots = rows.data
@@ -206,11 +291,15 @@ export async function getSlots(dayIso: string, durationMinutes: number): Promise
 
 // Books the appointment. Prices, durations and availability are checked in the database.
 // On success the customer is redirected: to Mollie when payments are active, otherwise to the status page.
-export async function createBookingAction(input: BookingPayload): Promise<Result> {
+export async function createBookingAction(
+  input: BookingPayload,
+): Promise<Result> {
   const parsed = bookingPayloadSchema.safeParse(input);
 
   if (!parsed.success) {
-    return failure(parsed.error.issues[0]?.message ?? "Controleer je gegevens.");
+    return failure(
+      parsed.error.issues[0]?.message ?? "Controleer je gegevens.",
+    );
   }
 
   const payload = parsed.data;
@@ -262,7 +351,10 @@ export async function createBookingAction(input: BookingPayload): Promise<Result
       }
 
       await recordMetric("booking_failed");
-      return failure(error.message, /tijdslot/i.test(error.message) ? "slot_taken" : undefined);
+      return failure(
+        error.message,
+        /tijdslot/i.test(error.message) ? "slot_taken" : undefined,
+      );
     }
 
     const booking = bookingCreatedSchema.safeParse(data);
@@ -271,7 +363,8 @@ export async function createBookingAction(input: BookingPayload): Promise<Result
       return failure(GENERIC_ERROR);
     }
 
-    const { reference, token, startsAt, totalCents, depositCents } = booking.data;
+    const { reference, token, startsAt, totalCents, depositCents } =
+      booking.data;
     const statusPath = bookingStatusPath(reference, token);
     await recordMetric("booking_created");
 

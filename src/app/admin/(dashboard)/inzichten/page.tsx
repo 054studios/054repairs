@@ -1,4 +1,4 @@
-import { amsterdamDay } from "@/lib/booking/format";
+import { addDays, amsterdamDay } from "@/lib/booking/format";
 import { requireAdmin } from "@/lib/auth";
 import { PageHeader } from "@/components/admin/page-header";
 import { Notice } from "@/components/admin/notice";
@@ -21,7 +21,7 @@ const labels: Record<string, string> = {
 };
 export default async function InsightsPage() {
   const { supabase } = await requireAdmin();
-  const since = amsterdamDay(new Date(Date.now() - 29 * 86400000));
+  const since = addDays(amsterdamDay(new Date()), -29);
   const { data, error } = await supabase
     .from("funnel_daily")
     .select("event,total")

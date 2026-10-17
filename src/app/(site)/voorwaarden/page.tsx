@@ -6,7 +6,11 @@ import { LegalPage, todo } from "@/components/site/legal";
 // Business name, contact details and refund rules come from the database on each request.
 export const instant = false;
 
-export const metadata = pageMetadata("Algemene voorwaarden", "Bekijk de voorwaarden voor het boeken en uitvoeren van een iPhone-reparatie bij 054repairs.", "/voorwaarden");
+export const metadata = pageMetadata(
+  "Algemene voorwaarden",
+  "Bekijk de voorwaarden voor het boeken en uitvoeren van een iPhone-reparatie bij 054repairs.",
+  "/voorwaarden",
+);
 
 export default async function TermsPage() {
   const settings = await getPublicSettings();
@@ -39,8 +43,9 @@ export default async function TermsPage() {
           title: "2. Onze dienst",
           content: (
             <p>
-              Wij komen naar het adres dat de klant opgeeft en repareren het toestel ter plekke in onze bus. Zodra de
-              reparatie klaar is, geven wij het toestel op dat adres terug.
+              Wij komen naar het adres dat de klant opgeeft en repareren het
+              toestel op locatie. Zodra de reparatie klaar is, geven wij het
+              toestel op dat adres terug.
             </p>
           ),
         },
@@ -50,8 +55,10 @@ export default async function TermsPage() {
           content: (
             <>
               <p>
-                De reparatieprijs staat vast op het moment van boeken en is zichtbaar op de prijzenpagina. De
-                voorrijkosten worden berekend op basis van de afstand tot ons vertrekpunt en worden apart vermeld.
+                De reparatieprijs staat vast op het moment van boeken en is
+                zichtbaar op de prijzenpagina. De voorrijkosten worden berekend
+                op basis van de afstand tot ons vertrekpunt en worden apart
+                vermeld.
               </p>
               <p>
                 {travel
@@ -67,8 +74,9 @@ export default async function TermsPage() {
           content: (
             <>
               <p>
-                Een boeking is definitief zodra de aanbetaling is ontvangen. Wordt de aanbetaling niet op tijd betaald,
-                dan vervalt de boeking en komt het tijdstip weer vrij.
+                Een boeking is definitief zodra de aanbetaling is ontvangen.
+                Wordt de aanbetaling niet op tijd betaald, dan vervalt de
+                boeking en komt het tijdstip weer vrij.
               </p>
               <p>
                 {todo(
@@ -83,8 +91,15 @@ export default async function TermsPage() {
           title: "5. Annuleren en terugbetaling",
           content: (
             <>
-              <p>Je kunt een boeking annuleren tot het moment dat de afspraak begint, via je boekingspagina.</p>
-              <p>{settings ? refundText(settings) : todo("[Terugbetalingsregels invullen.]")}</p>
+              <p>
+                Je kunt een boeking annuleren tot het moment dat de afspraak
+                begint, via je boekingspagina.
+              </p>
+              <p>
+                {settings
+                  ? refundText(settings)
+                  : todo("[Terugbetalingsregels invullen.]")}
+              </p>
             </>
           ),
         },
@@ -104,8 +119,10 @@ export default async function TermsPage() {
           title: "7. Aansprakelijkheid",
           content: (
             <p>
-              Wij zijn niet aansprakelijk voor verlies van gegevens. Maak daarom vooraf altijd een back-up. Voor zover de
-              wet dat toestaat, is onze aansprakelijkheid beperkt tot het bedrag van de betreffende reparatie.
+              Wij zijn niet aansprakelijk voor verlies van gegevens. Maak daarom
+              vooraf altijd een back-up. Voor zover de wet dat toestaat, is onze
+              aansprakelijkheid beperkt tot het bedrag van de betreffende
+              reparatie.
             </p>
           ),
         },

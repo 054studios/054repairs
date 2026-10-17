@@ -25,13 +25,20 @@ export const APPOINTMENT_STATUS_HEADLINES: Record<string, string> = {
 };
 
 // The route a booking travels, in order. Cancelled and expired leave the route.
-export const STATUS_ROUTE = ["new", "confirmed", "picked_up", "in_repair", "ready", "returned"] as const;
+export const STATUS_ROUTE = [
+  "new",
+  "confirmed",
+  "picked_up",
+  "in_repair",
+  "ready",
+  "returned",
+] as const;
 
 // One line under the current stop of the route.
 export const STATUS_ROUTE_TEXT: Record<string, string> = {
   new: "Je boeking is vastgelegd. Wij bevestigen de afspraak.",
   confirmed: "Wij komen op het afgesproken tijdstip naar je adres.",
-  picked_up: "Je toestel ligt bij ons in de bus.",
+  picked_up: "Je toestel is bij de monteur voor de reparatie.",
   in_repair: "De reparatie is bezig, vlak bij je adres.",
   ready: "De reparatie is klaar. Wij brengen je toestel zo terug.",
   returned: "De afspraak is afgerond.",

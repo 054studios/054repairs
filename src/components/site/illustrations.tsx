@@ -6,7 +6,12 @@ import type { ReactNode } from "react";
 
 function Scene({ children }: { children: ReactNode }) {
   return (
-    <svg viewBox="0 0 320 240" aria-hidden="true" focusable="false" className="ill aspect-[4/3]">
+    <svg
+      viewBox="0 0 320 240"
+      aria-hidden="true"
+      focusable="false"
+      className="ill aspect-[4/3]"
+    >
       {children}
     </svg>
   );
@@ -28,7 +33,14 @@ export function BookingScene() {
   return (
     <Scene>
       <Glow id="ill-glow-book" />
-      <ellipse cx="160" cy="120" rx="132" ry="108" fill="url(#ill-glow-book)" className="n" />
+      <ellipse
+        cx="160"
+        cy="120"
+        rx="132"
+        ry="108"
+        fill="url(#ill-glow-book)"
+        className="n"
+      />
       <rect x="106" y="14" width="108" height="212" rx="22" className="f8 k" />
       <rect x="113" y="21" width="94" height="198" rx="16" className="f0 q" />
       <rect x="145" y="29" width="30" height="9" rx="4.5" className="f8 n" />
@@ -55,43 +67,40 @@ export function BookingScene() {
   );
 }
 
-// Stop 2: the van on the road, following the route to the pin at your address.
+// Stop 2: a route to the customer's location.
 export function DriveScene() {
   return (
     <Scene>
-      <circle cx="34" cy="36" r="1.2" className="fs n" />
-      <circle cx="96" cy="58" r="1" className="fs n" />
-      <circle cx="150" cy="28" r="1.2" className="fs n" />
-      <circle cx="206" cy="62" r="1" className="fs n" />
-      <circle cx="300" cy="34" r="1.2" className="fs n" />
-      <rect x="0" y="182" width="320" height="44" className="f9 n" />
-      <path d="M0 182H320M0 226H320" className="q" />
-      <path d="M238 182v-40l27-22 27 22v40z" className="f8 k" />
-      <rect x="258" y="158" width="14" height="24" rx="2" className="f0 q" />
-      <rect x="246" y="144" width="10" height="10" rx="1.5" className="fc n" />
-      <path d="M265 110c-8-9-13-15.5-13-22a13 13 0 0 1 26 0c0 6.5-5 13-13 22z" className="f8 c" />
-      <circle cx="265" cy="88" r="4.5" className="fc n" />
-      <path d="M18 204H240q25 0 25-22" className="c" />
-      <circle cx="18" cy="204" r="4" className="fc n" />
-      <path d="M198 170l40-9v26l-40-9z" className="fb" />
-      <path d="M34 196V134a14 14 0 0 1 14-14h104c8 0 13 3 18 9l21 27c4 5 6 10 6 16v24z" className="f8 k" />
-      <path d="M156 128h7c3 0 5 1 7 3.5l16 20.5h-30z" className="f0 q" />
-      <path d="M100 124v68M150 124v68" className="q" />
-      <path d="M157 162h9" className="k" />
-      <rect x="56" y="140" width="13" height="21" rx="3.5" className="c" />
-      <circle cx="62.5" cy="154" r="2" className="fc n" />
-      <path d="M76 148h20M76 154h12" className="k" />
-      <rect x="193" y="167" width="5" height="7" rx="2" className="fc n" />
-      <path d="M52 196a18 18 0 0 1 36 0M144 196a18 18 0 0 1 36 0" className="f0 n" />
-      <circle cx="70" cy="196" r="14" className="f0 k" />
-      <circle cx="70" cy="196" r="5" />
-      <circle cx="162" cy="196" r="14" className="f0 k" />
-      <circle cx="162" cy="196" r="5" />
+      <Glow id="ill-location" />
+      <circle
+        cx="160"
+        cy="120"
+        r="104"
+        fill="url(#ill-location)"
+        className="n"
+      />
+      <path
+        d="M32 182h78q24 0 24-24v-28q0-24 24-24h47"
+        className="c"
+        strokeDasharray="5 7"
+      />
+      <circle cx="32" cy="182" r="9" className="f8 c" />
+      <path d="M188 188v-57l42-34 42 34v57z" className="f8 k" />
+      <rect x="220" y="155" width="21" height="33" rx="3" className="f0 c" />
+      <rect x="199" y="140" width="12" height="14" rx="2" className="fc n" />
+      <path
+        d="M230 79c-16-18-25-30-25-43a25 25 0 0 1 50 0c0 13-9 25-25 43z"
+        className="f8 c"
+      />
+      <circle cx="230" cy="36" r="8" className="fc n" />
+      <rect x="50" y="50" width="61" height="98" rx="12" className="f8 k" />
+      <rect x="57" y="58" width="47" height="81" rx="7" className="f0 q" />
+      <path d="M69 99l8 8 16-18" className="c" />
     </Scene>
   );
 }
 
-// Stop 3: inside the van. An opened iPhone under the work lamp, the new screen folding in.
+// Stop 3: the repair. An opened iPhone under the work lamp, the new screen folding in.
 export function BenchScene() {
   return (
     <Scene>
@@ -112,7 +121,15 @@ export function BenchScene() {
       <rect x="139" y="90" width="8" height="6" rx="1.5" className="fc n" />
       <g transform="rotate(-12 206 112)">
         <rect x="172" y="61" width="68" height="102" rx="12" className="f0 c" />
-        <rect x="178" y="67" width="56" height="90" rx="8" fill="url(#ill-glow-bench)" className="n" />
+        <rect
+          x="178"
+          y="67"
+          width="56"
+          height="90"
+          rx="8"
+          fill="url(#ill-glow-bench)"
+          className="n"
+        />
       </g>
       <path d="M167 95c-7-1-13-2-20-2" className="c" />
       <path d="M214 172h20" className="k" />
@@ -131,8 +148,17 @@ export function HandoverScene() {
   return (
     <Scene>
       <Glow id="ill-glow-hand" />
-      <circle cx="160" cy="104" r="100" fill="url(#ill-glow-hand)" className="n" />
-      <path d="M112 240c-2-22-4-46 4-62 8-14 24-20 44-20s38 6 46 20c8 16 6 40 4 62z" className="f7 k" />
+      <circle
+        cx="160"
+        cy="104"
+        r="100"
+        fill="url(#ill-glow-hand)"
+        className="n"
+      />
+      <path
+        d="M112 240c-2-22-4-46 4-62 8-14 24-20 44-20s38 6 46 20c8 16 6 40 4 62z"
+        className="f7 k"
+      />
       <rect x="118" y="30" width="84" height="150" rx="17" className="f8 k" />
       <rect x="124" y="36" width="72" height="138" rx="12" className="f0 q" />
       <rect x="149" y="43" width="22" height="7" rx="3.5" className="f8 n" />
@@ -143,7 +169,15 @@ export function HandoverScene() {
       <rect x="102" y="118" width="24" height="14" rx="7" className="f7 k" />
       <rect x="104" y="136" width="22" height="14" rx="7" className="f7 k" />
       <rect x="108" y="154" width="18" height="13" rx="6.5" className="f7 k" />
-      <rect x="190" y="120" width="16" height="44" rx="8" transform="rotate(-28 198 142)" className="f7 k" />
+      <rect
+        x="190"
+        y="120"
+        width="16"
+        height="44"
+        rx="8"
+        transform="rotate(-28 198 142)"
+        className="f7 k"
+      />
     </Scene>
   );
 }

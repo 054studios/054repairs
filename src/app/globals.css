@@ -518,3 +518,20 @@ html:has(:focus-visible) :is(.page-enter, .table-arrive, .figure-swap) { animati
   .skeleton::after { opacity: 0; animation: none !important; }
   .loading-spinner, .page-enter, .content-arrive, .table-arrive, .reveal-on-scroll { animation: none !important; transform: none; }
 }
+
+/* Private documents print without navigation or dark backgrounds. */
+@media print {
+ @page { size: A4; margin: 16mm; }
+ html, body { background: white !important; color: #111 !important; }
+ .document-page { max-width: none; min-height: 0; margin: 0; padding: 0; font-family: Arial, sans-serif; font-size: 10pt; }
+ .document-controls { display: none !important; }
+ .document-page table { font-size: 9pt; }
+ .document-page tr, .document-page dl > div { break-inside: avoid; }
+ .document-page .overflow-x-auto { overflow: visible; }
+ .document-page .invoice + .repair-report { break-before: page; margin-top: 0; }
+}
+
+.document-page th, .document-page td { padding-left: 0.5rem; padding-right: 0.5rem; }
+.document-page th:first-child, .document-page td:first-child { padding-left: 0; }
+.document-page th:last-child, .document-page td:last-child { padding-right: 0; }
+@media print { .document-page table { min-width: 0; } }

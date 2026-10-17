@@ -75,8 +75,8 @@ export default async function RepairPage({ params }: Props) {
             {repair.preparation}
           </p>
           <p className="mt-4 text-steel-400">
-            Wij repareren ter plekke in onze bus. Je ziet de gekozen kwaliteit
-            en duur voordat je boekt.{" "}
+            Wij repareren op locatie. Je ziet de gekozen kwaliteit en duur
+            voordat je boekt.{" "}
             <Link
               href="/contact"
               className="inline-flex min-h-11 items-center text-cyan-300 underline"

@@ -16,6 +16,14 @@ import { ScrollStrip } from "./scroll-strip";
 
 const navItems: { href: string; label: string; icon: Icon }[] = [
   { href: "/admin", label: "Overzicht", icon: HouseIcon },
+  { href: "/admin/werkdag", label: "Werkdag", icon: PathIcon },
+  { href: "/admin/voorraad", label: "Voorraad", icon: TagIcon },
+  { href: "/admin/publicatie", label: "Foto’s en reviews", icon: HouseIcon },
+  {
+    href: "/admin/bedrijfsvoering",
+    label: "Bedrijfsvoering",
+    icon: GearSixIcon,
+  },
   { href: "/admin/afspraken", label: "Afspraken", icon: CalendarCheckIcon },
   { href: "/admin/catalogus", label: "Catalogus", icon: TagIcon },
   { href: "/admin/voorrijkosten", label: "Voorrijkosten", icon: PathIcon },
@@ -38,12 +46,17 @@ function isActive(pathname: string, href: string): boolean {
 // Items are 2.75rem high with a 0.25rem gap, so stop n sits at n * 3rem.
 export function AdminRailNav() {
   const pathname = usePathname();
-  const activeIndex = navItems.findIndex((item) => isActive(pathname, item.href));
+  const activeIndex = navItems.findIndex((item) =>
+    isActive(pathname, item.href),
+  );
 
   return (
     <nav aria-label="Beheer">
       <div className="relative pl-3">
-        <span aria-hidden="true" className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-line" />
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-line"
+        />
         <span
           aria-hidden="true"
           className="absolute left-0 top-3 h-5 w-0.5 rounded-full bg-cyan-400 transition-[transform,opacity] duration-300 ease-in-out-strong"

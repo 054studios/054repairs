@@ -1,19 +1,37 @@
 import { pageMetadata } from "@/components/site/seo";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { getCatalogue, getPublicSettings, durationRange } from "@/components/site/data";
-import { depositPhrase, refundText, travelSummary } from "@/components/site/facts";
-import { ServiceRoute, type ServiceStop } from "@/components/site/service-route";
+import {
+  getCatalogue,
+  getPublicSettings,
+  durationRange,
+} from "@/components/site/data";
+import {
+  depositPhrase,
+  refundText,
+  travelSummary,
+} from "@/components/site/facts";
+import {
+  ServiceRoute,
+  type ServiceStop,
+} from "@/components/site/service-route";
 import { ClosingCta, Container, PageHeader } from "@/components/site/ui";
 import { displayClass, textLinkClass } from "@/components/ui/styles";
 
 // The booking details, deposit text and durations come from the database on each request.
 export const instant = false;
 
-export const metadata = pageMetadata("Zo werkt iPhone-reparatie aan huis", "Van online boeken tot reparatie voor je deur: bekijk de werkwijze, betaling en voorrijkosten van 054repairs.", "/hoe-het-werkt");
+export const metadata = pageMetadata(
+  "Zo werkt iPhone-reparatie aan huis",
+  "Van online boeken tot reparatie voor je deur: bekijk de werkwijze, betaling en voorrijkosten van 054repairs.",
+  "/hoe-het-werkt",
+);
 
 export default async function HowItWorksPage() {
-  const [settings, catalogue] = await Promise.all([getPublicSettings(), getCatalogue()]);
+  const [settings, catalogue] = await Promise.all([
+    getPublicSettings(),
+    getCatalogue(),
+  ]);
   const travel = settings ? travelSummary(settings) : null;
   const range = catalogue ? durationRange(catalogue) : null;
 
@@ -24,15 +42,19 @@ export default async function HowItWorksPage() {
       body: (
         <>
           <p>
-            Kies je model, de reparatie en de kwaliteit. Je ziet meteen de vaste prijs en hoe lang de reparatie duurt.
+            Kies je model, de reparatie en de kwaliteit. Je ziet meteen de vaste
+            prijs en hoe lang de reparatie duurt.
           </p>
           <p>
-            Daarna kies je een vrij tijdstip en vul je je adres in, zodat we de voorrijkosten kunnen berekenen.
-            {settings ? ` Je boekt minimaal ${settings.bookingLeadHours} uur vooruit.` : null}
+            Daarna kies je een vrij tijdstip en vul je je adres in, zodat we de
+            voorrijkosten kunnen berekenen.
+            {settings
+              ? ` Je boekt minimaal ${settings.bookingLeadHours} uur vooruit.`
+              : null}
           </p>
           <p>
-            Met de aanbetaling leg je het tijdstip vast. Betaal je niet op tijd, dan vervalt de boeking en komt het
-            tijdstip weer vrij.
+            Met de aanbetaling leg je het tijdstip vast. Betaal je niet op tijd,
+            dan vervalt de boeking en komt het tijdstip weer vrij.
           </p>
         </>
       ),
@@ -43,7 +65,10 @@ export default async function HowItWorksPage() {
       title: "Wij rijden naar je toe",
       body: (
         <>
-          <p>Op het afgesproken tijdstip rijden we met de bus naar het adres dat je hebt opgegeven.</p>
+          <p>
+            Op het afgesproken tijdstip rijden we naar het adres dat je hebt
+            opgegeven.
+          </p>
           <p>
             {travel
               ? `${travel.free} ${travel.over} ${travel.max}`
@@ -55,14 +80,17 @@ export default async function HowItWorksPage() {
     },
     {
       scene: "repareren",
-      title: "Reparatie in de bus",
+      title: "Reparatie op locatie",
       body: (
         <>
           <p>
-            We repareren je iPhone ter plekke, in onze bus. Je toestel gaat dus niet mee naar een werkplaats, het blijft
-            bij jou in de buurt.
+            We repareren je iPhone op locatie. Je toestel gaat dus niet mee naar
+            een werkplaats, het blijft bij jou in de buurt.
           </p>
-          <p>De duur van je reparatie staat bij de prijs en in je boeking. Zo lang duurt ook je afspraak.</p>
+          <p>
+            De duur van je reparatie staat bij de prijs en in je boeking. Zo
+            lang duurt ook je afspraak.
+          </p>
         </>
       ),
       fact: range
@@ -76,8 +104,9 @@ export default async function HowItWorksPage() {
       title: "Terug bij jou",
       body: (
         <p>
-          Zodra de reparatie klaar is, krijg je je iPhone terug. Het restbedrag betaal je dan met pin of contant, tenzij
-          je al alles vooraf hebt betaald.
+          Zodra de reparatie klaar is, krijg je je iPhone terug. Het restbedrag
+          betaal je dan met pin of contant, tenzij je al alles vooraf hebt
+          betaald.
         </p>
       ),
       fact: "Restbedrag met pin of contant",
@@ -100,21 +129,29 @@ export default async function HowItWorksPage() {
           <Practical id="klaarzetten" title="Wat je klaarzet">
             <ul className="space-y-3">
               <li>
-                Een back-up van je iPhone. Bij een reparatie kunnen gegevens verloren gaan, ook als we zorgvuldig
-                werken.
+                Een back-up van je iPhone. Bij een reparatie kunnen gegevens
+                verloren gaan, ook als we zorgvuldig werken.
               </li>
               <li>
-                Een plek bij je adres waar de bus kan staan. Is parkeren lastig, zet het dan bij de opmerkingen in je
-                boeking.
+                Een goed bereikbaar adres. Zijn er bijzonderheden, zet die dan
+                bij de opmerkingen in je boeking.
               </li>
-              <li>Deel je pincode of wachtwoord nooit per e-mail of via een bericht.</li>
+              <li>
+                Deel je pincode of wachtwoord nooit per e-mail of via een
+                bericht.
+              </li>
             </ul>
           </Practical>
 
-          <Practical id="onderdeel" title="Als een onderdeel niet beschikbaar is">
+          <Practical
+            id="onderdeel"
+            title="Als een onderdeel niet beschikbaar is"
+          >
             <p>
-              Soms is een onderdeel voor jouw model tijdelijk niet leverbaar. Dan nemen we contact met je op voordat we
-              naar je toe rijden, en overleggen we hoe we verder gaan, bijvoorbeeld met een nieuw tijdstip.
+              Soms is een onderdeel voor jouw model tijdelijk niet leverbaar.
+              Dan nemen we contact met je op voordat we naar je toe rijden, en
+              overleggen we hoe we verder gaan, bijvoorbeeld met een nieuw
+              tijdstip.
             </p>
           </Practical>
 
@@ -124,14 +161,22 @@ export default async function HowItWorksPage() {
                 ? `Bij het boeken betaal je ${depositPhrase(settings)} online.`
                 : "Bij het boeken betaal je een aanbetaling online."}{" "}
               Het restbedrag betaal je bij teruggave met pin of contant.
-              {settings?.allowFullPrepay ? " Je kunt ook meteen het hele bedrag online betalen." : null}
+              {settings?.allowFullPrepay
+                ? " Je kunt ook meteen het hele bedrag online betalen."
+                : null}
             </p>
             <p>
-              Annuleren kan tot het moment dat je afspraak begint, via je boekingspagina.{" "}
-              {settings ? refundText(settings) : "Hoeveel je terugkrijgt, hangt af van het moment van annuleren."}
+              Annuleren kan tot het moment dat je afspraak begint, via je
+              boekingspagina.{" "}
+              {settings
+                ? refundText(settings)
+                : "Hoeveel je terugkrijgt, hangt af van het moment van annuleren."}
             </p>
             <p>
-              <Link href="/voorwaarden" className={`${textLinkClass} inline-flex min-h-11 items-center`}>
+              <Link
+                href="/voorwaarden"
+                className={`${textLinkClass} inline-flex min-h-11 items-center`}
+              >
                 Lees de voorwaarden
               </Link>
             </p>
@@ -152,10 +197,24 @@ export default async function HowItWorksPage() {
   );
 }
 
-function Practical({ id, title, children }: { id: string; title: string; children: ReactNode }) {
+function Practical({
+  id,
+  title,
+  children,
+}: {
+  id: string;
+  title: string;
+  children: ReactNode;
+}) {
   return (
-    <section aria-labelledby={`${id}-titel`} className="grid gap-4 py-10 md:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] md:gap-12 md:py-12">
-      <h2 id={`${id}-titel`} className={`${displayClass} text-[clamp(1.5rem,2.6vw,2rem)] leading-[1.12]`}>
+    <section
+      aria-labelledby={`${id}-titel`}
+      className="grid gap-4 py-10 md:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] md:gap-12 md:py-12"
+    >
+      <h2
+        id={`${id}-titel`}
+        className={`${displayClass} text-[clamp(1.5rem,2.6vw,2rem)] leading-[1.12]`}
+      >
         {title}
       </h2>
       <div className="max-w-[60ch] space-y-4 text-base leading-relaxed text-steel-300 md:text-[1.0625rem]">

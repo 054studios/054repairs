@@ -1,7 +1,13 @@
 "use client";
 
 import { ArrowLeftIcon, WarningCircleIcon } from "@phosphor-icons/react";
-import { AnimatePresence, MotionConfig, motion, useReducedMotion, type Variants } from "motion/react";
+import {
+  AnimatePresence,
+  MotionConfig,
+  motion,
+  useReducedMotion,
+  type Variants,
+} from "motion/react";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { trackBookingStep } from "@/lib/funnel-client";
 import { RouteProgress } from "@/components/ui/route";
@@ -67,7 +73,12 @@ type WizardState = {
 };
 
 // Choices that depend on the repair duration. Cleared whenever the duration changes.
-const SLOT_RESET: Partial<WizardState> = { day: null, slots: [], slotsFor: null, startsAt: null };
+const SLOT_RESET: Partial<WizardState> = {
+  day: null,
+  slots: [],
+  slotsFor: null,
+  startsAt: null,
+};
 
 const LAST_STEP = WIZARD_STEPS.length - 1;
 
@@ -80,8 +91,15 @@ function stepVariants(reduced: boolean): Variants {
   const shift = (px: number) => (reduced ? "none" : `translateX(${px}px)`);
 
   return {
-    enter: (direction: number) => ({ opacity: 0, transform: shift(direction * SHIFT_PX) }),
-    center: { opacity: 1, transform: "none", transition: { duration: 0.22, ease: EASE_OUT } },
+    enter: (direction: number) => ({
+      opacity: 0,
+      transform: shift(direction * SHIFT_PX),
+    }),
+    center: {
+      opacity: 1,
+      transform: "none",
+      transition: { duration: 0.22, ease: EASE_OUT },
+    },
     exit: (direction: number) => ({
       opacity: 0,
       transform: shift(direction * -SHIFT_PX),
@@ -91,10 +109,16 @@ function stepVariants(reduced: boolean): Variants {
 }
 
 function moveTo(previous: WizardState, target: number): WizardState {
-  return { ...previous, step: target, direction: target >= previous.step ? 1 : -1 };
+  return {
+    ...previous,
+    step: target,
+    direction: target >= previous.step ? 1 : -1,
+  };
 }
 
-function toFieldErrors(issues: { path: PropertyKey[]; message: string }[]): Partial<Record<CustomerField, string>> {
+function toFieldErrors(
+  issues: { path: PropertyKey[]; message: string }[],
+): Partial<Record<CustomerField, string>> {
   const errors: Partial<Record<CustomerField, string>> = {};
 
   for (const issue of issues) {
@@ -110,18 +134,32 @@ function toFieldErrors(issues: { path: PropertyKey[]; message: string }[]): Part
 
 const CUSTOMER_ORDER: CustomerField[] = ["name", "phone", "email", "note"];
 
-export function BookingWizard({ catalog, preset = null }: { catalog: BookingCatalog; preset?: WizardPreset | null }) {
-  const { brands, models, repairTypes, qualities, settings, mollieReady } = catalog;
+export function BookingWizard({
+  catalog,
+  preset = null,
+}: {
+  catalog: BookingCatalog;
+  preset?: WizardPreset | null;
+}) {
+  const { brands, models, repairTypes, qualities, settings, mollieReady } =
+    catalog;
   const reduceMotion = useReducedMotion() ?? false;
 
   const [state, setState] = useState<WizardState>(() => {
-    const presetModel = preset ? models.find((model) => model.id === preset.modelId) : undefined;
-    const presetOptions = presetModel && preset?.options ? preset.options : null;
+    const presetModel = preset
+      ? models.find((model) => model.id === preset.modelId)
+      : undefined;
+    const presetOptions =
+      presetModel && preset?.options ? preset.options : null;
 
     return {
       step: presetOptions ? 1 : 0,
       direction: 1,
-      brandId: presetModel ? presetModel.brandId : brands.length === 1 ? brands[0].id : null,
+      brandId: presetModel
+        ? presetModel.brandId
+        : brands.length === 1
+          ? brands[0].id
+          : null,
       modelId: presetModel ? presetModel.id : null,
       options: presetOptions ?? [],
       optionsFor: presetOptions && presetModel ? presetModel.id : null,
@@ -139,7 +177,9 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
     };
   });
   const [error, setError] = useState<string | null>(null);
-  const [customerErrors, setCustomerErrors] = useState<Partial<Record<CustomerField, string>>>({});
+  const [customerErrors, setCustomerErrors] = useState<
+    Partial<Record<CustomerField, string>>
+  >({});
   const [travelFailed, setTravelFailed] = useState(false);
   // Navigation (Volgende, booking) and background data (travel fee, times) load separately,
   // so the main button only shows a busy label for its own work.
@@ -156,30 +196,56 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
   const [website, setWebsite] = useState("");
   const seenSteps = useRef(new Set<number>());
   useEffect(() => {
-    if (!seenSteps.current.has(step)) { seenSteps.current.add(step); trackBookingStep(step); }
+    if (!seenSteps.current.has(step)) {
+      seenSteps.current.add(step);
+      trackBookingStep(step);
+    }
   }, [step]);
-  const optionsNow = state.modelId !== null && state.optionsFor === state.modelId ? state.options : [];
-  const offeredRepairs = repairTypes.filter((repair) => optionsNow.some((option) => option.repairTypeId === repair.id));
-  const qualityRank = new Map(qualities.map((quality, index) => [quality.id, index]));
+  const optionsNow =
+    state.modelId !== null && state.optionsFor === state.modelId
+      ? state.options
+      : [];
+  const offeredRepairs = repairTypes.filter((repair) =>
+    optionsNow.some((option) => option.repairTypeId === repair.id),
+  );
+  const qualityRank = new Map(
+    qualities.map((quality, index) => [quality.id, index]),
+  );
 
   const chosen: RepairOption[] = offeredRepairs.flatMap((repair) => {
     const qualityId = state.selections[repair.id];
     const option = qualityId
-      ? optionsNow.find((item) => item.repairTypeId === repair.id && item.qualityId === qualityId)
+      ? optionsNow.find(
+          (item) =>
+            item.repairTypeId === repair.id && item.qualityId === qualityId,
+        )
       : undefined;
     return option ? [option] : [];
   });
 
-  const repairTotalCents = chosen.reduce((sum, option) => sum + option.priceCents, 0);
-  const durationMinutes = chosen.reduce((sum, option) => sum + option.durationMinutes, 0);
+  const repairTotalCents = chosen.reduce(
+    (sum, option) => sum + option.priceCents,
+    0,
+  );
+  const durationMinutes = chosen.reduce(
+    (sum, option) => sum + option.durationMinutes,
+    0,
+  );
   const feeCents = state.travel?.feeCents ?? 0;
   const totalCents = repairTotalCents + feeCents;
-  const paymentChoice: PaymentChoice = settings.allowFullPrepay ? state.paymentChoice : "deposit";
+  const paymentChoice: PaymentChoice = settings.allowFullPrepay
+    ? state.paymentChoice
+    : "deposit";
   const depositCents = depositCentsFor(totalCents, settings, paymentChoice);
-  const modelName = models.find((model) => model.id === state.modelId)?.name ?? "";
+  const modelName =
+    models.find((model) => model.id === state.modelId)?.name ?? "";
 
-  const repairNames = new Map(repairTypes.map((repair) => [repair.id, repair.name]));
-  const qualityNames = new Map(qualities.map((quality) => [quality.id, quality.name]));
+  const repairNames = new Map(
+    repairTypes.map((repair) => [repair.id, repair.name]),
+  );
+  const qualityNames = new Map(
+    qualities.map((quality) => [quality.id, quality.name]),
+  );
   const reviewLines: ReviewLine[] = chosen.map((option) => ({
     key: `${option.repairTypeId}-${option.qualityId}`,
     name: repairNames.get(option.repairTypeId) ?? "Reparatie",
@@ -227,7 +293,11 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
     } else {
       const first = optionsNow
         .filter((option) => option.repairTypeId === repairTypeId)
-        .sort((a, b) => (qualityRank.get(a.qualityId) ?? 0) - (qualityRank.get(b.qualityId) ?? 0))[0];
+        .sort(
+          (a, b) =>
+            (qualityRank.get(a.qualityId) ?? 0) -
+            (qualityRank.get(b.qualityId) ?? 0),
+        )[0];
 
       if (!first) {
         return;
@@ -242,13 +312,16 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
 
   function chooseQuality(repairTypeId: string, qualityId: string) {
     setError(null);
-    update({ selections: { ...state.selections, [repairTypeId]: qualityId }, ...SLOT_RESET });
+    update({
+      selections: { ...state.selections, [repairTypeId]: qualityId },
+      ...SLOT_RESET,
+    });
   }
 
   function pickAddress(address: AddressSuggestion) {
     setError(null);
     setTravelFailed(false);
-    update({ address, travel: null });
+    update({ address, travel: null, daysFor: null, ...SLOT_RESET });
 
     startData(async () => {
       const result = await calculateTravel(address.lat, address.lng);
@@ -260,19 +333,26 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
       }
 
       const quote = result.quote;
-      setState((previous) => (previous.address === address ? { ...previous, travel: quote } : previous));
+      setState((previous) =>
+        previous.address === address
+          ? { ...previous, travel: quote }
+          : previous,
+      );
     });
   }
 
   function resetAddress() {
     setError(null);
     setTravelFailed(false);
-    update({ address: null, travel: null });
+    update({ address: null, travel: null, daysFor: null, ...SLOT_RESET });
   }
 
   function loadDays(duration: number, nextStep: number) {
     startNav(async () => {
-      const result = await getAvailableDays(duration);
+      const result = await getAvailableDays(
+        duration,
+        state.address ?? undefined,
+      );
 
       if (!result.ok) {
         setError(result.message);
@@ -280,7 +360,11 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
       }
 
       const days = result.days;
-      setState((previous) => ({ ...moveTo(previous, nextStep), days, daysFor: duration }));
+      setState((previous) => ({
+        ...moveTo(previous, nextStep),
+        days,
+        daysFor: duration,
+      }));
     });
   }
 
@@ -290,7 +374,7 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
     const duration = durationMinutes;
 
     startData(async () => {
-      const result = await getSlots(day, duration);
+      const result = await getSlots(day, duration, state.address ?? undefined);
 
       if (!result.ok) {
         setError(result.message);
@@ -298,7 +382,9 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
       }
 
       const slots = result.slots;
-      setState((previous) => (previous.day === day ? { ...previous, slots, slotsFor: day } : previous));
+      setState((previous) =>
+        previous.day === day ? { ...previous, slots, slotsFor: day } : previous,
+      );
     });
   }
 
@@ -308,7 +394,10 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
   }
 
   function updateCustomer(field: CustomerField, value: string) {
-    setState((previous) => ({ ...previous, customer: { ...previous.customer, [field]: value } }));
+    setState((previous) => ({
+      ...previous,
+      customer: { ...previous.customer, [field]: value },
+    }));
     setCustomerErrors((previous) => ({ ...previous, [field]: undefined }));
   }
 
@@ -358,7 +447,11 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
         }
 
         const options = result.options;
-        setState((previous) => ({ ...moveTo(previous, 1), options, optionsFor: modelId }));
+        setState((previous) => ({
+          ...moveTo(previous, 1),
+          options,
+          optionsFor: modelId,
+        }));
       });
       return;
     }
@@ -398,7 +491,9 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
         const errors = toFieldErrors(check.error.issues);
         setCustomerErrors(errors);
         // Take the visitor straight to the first field that needs attention.
-        const first = CUSTOMER_ORDER.find((field) => errors[field] !== undefined);
+        const first = CUSTOMER_ORDER.find(
+          (field) => errors[field] !== undefined,
+        );
         if (first) {
           document.getElementById(first)?.focus();
         }
@@ -426,7 +521,10 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
     const payload: BookingPayload = {
       website,
       modelId,
-      items: chosen.map((option) => ({ repairTypeId: option.repairTypeId, qualityId: option.qualityId })),
+      items: chosen.map((option) => ({
+        repairTypeId: option.repairTypeId,
+        qualityId: option.qualityId,
+      })),
       address: {
         street: address.street,
         houseNumber: address.houseNumber,
@@ -451,7 +549,14 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
 
       if (result.code === "slot_taken") {
         navigated.current = true;
-        setState((previous) => ({ ...previous, day: null, slots: [], slotsFor: null, startsAt: null, daysFor: null }));
+        setState((previous) => ({
+          ...previous,
+          day: null,
+          slots: [],
+          slotsFor: null,
+          startsAt: null,
+          daysFor: null,
+        }));
         loadDays(durationMinutes, 3);
       }
     });
@@ -473,7 +578,9 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
     }
 
     navigated.current = false;
-    stepRef.current?.querySelector<HTMLElement>("[data-step-heading]")?.focus({ preventScroll: true });
+    stepRef.current
+      ?.querySelector<HTMLElement>("[data-step-heading]")
+      ?.focus({ preventScroll: true });
   }
 
   function renderStep() {
@@ -564,37 +671,78 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
   }
 
   // What the action bar shows next to the button: the running amount, or what is still missing.
-  const summary: { label: string; cents: number; detail?: string } | null = (() => {
-    if (step === 1 && chosen.length > 0) {
-      return { label: "Reparatie", cents: repairTotalCents, detail: formatDuration(durationMinutes) };
-    }
-    if (step === 2 && chosen.length > 0) {
-      return state.travel
-        ? { label: "Totaal", cents: totalCents, detail: "met voorrijkosten" }
-        : { label: "Reparatie", cents: repairTotalCents, detail: "zonder voorrijkosten" };
-    }
-    if (step === 3 || step === 4) {
-      return { label: "Totaal", cents: totalCents, detail: formatDuration(durationMinutes) };
-    }
-    if (step === LAST_STEP) {
-      return mollieReady
-        ? { label: "Nu betalen", cents: depositCents, detail: `van ${formatEuro(totalCents)}` }
-        : { label: "Totaal", cents: totalCents };
-    }
-    return null;
-  })();
+  const summary: { label: string; cents: number; detail?: string } | null =
+    (() => {
+      if (step === 1 && chosen.length > 0) {
+        return {
+          label: "Reparatie",
+          cents: repairTotalCents,
+          detail: formatDuration(durationMinutes),
+        };
+      }
+      if (step === 2 && chosen.length > 0) {
+        return state.travel
+          ? { label: "Totaal", cents: totalCents, detail: "met voorrijkosten" }
+          : {
+              label: "Reparatie",
+              cents: repairTotalCents,
+              detail: "zonder voorrijkosten",
+            };
+      }
+      if (step === 3 || step === 4) {
+        return {
+          label: "Totaal",
+          cents: totalCents,
+          detail: formatDuration(durationMinutes),
+        };
+      }
+      if (step === LAST_STEP) {
+        return mollieReady
+          ? {
+              label: "Nu betalen",
+              cents: depositCents,
+              detail: `van ${formatEuro(totalCents)}`,
+            }
+          : { label: "Totaal", cents: totalCents };
+      }
+      return null;
+    })();
 
   // Shown in place of the amount while the step's question is still open.
-  const missing = step === 0 ? "Kies je model" : step === 1 ? "Kies een reparatie" : null;
+  const missing =
+    step === 0 ? "Kies je model" : step === 1 ? "Kies een reparatie" : null;
 
-  const nextLabel = step === LAST_STEP ? (mollieReady ? "Bevestig en betaal" : "Bevestig boeking") : "Volgende";
+  const nextLabel =
+    step === LAST_STEP
+      ? mollieReady
+        ? "Bevestig en betaal"
+        : "Bevestig boeking"
+      : "Volgende";
   const busyLabel =
-    step === 0 ? "Prijzen laden" : step === 2 ? "Agenda laden" : step === LAST_STEP ? "Boeking vastleggen" : "Even geduld";
+    step === 0
+      ? "Prijzen laden"
+      : step === 2
+        ? "Agenda laden"
+        : step === LAST_STEP
+          ? "Boeking vastleggen"
+          : "Even geduld";
 
   return (
     <MotionConfig reducedMotion="user">
       <div ref={topRef} className="flex flex-col">
-        <div aria-hidden="true" className="absolute -left-[10000px] top-0"><label htmlFor="booking-website">Website<input id="booking-website" name="website" value={website} onChange={e => setWebsite(e.target.value)} tabIndex={-1} autoComplete="off" /></label></div>
+        <div aria-hidden="true" className="absolute -left-[10000px] top-0">
+          <label htmlFor="booking-website">
+            Website
+            <input
+              id="booking-website"
+              name="website"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+            />
+          </label>
+        </div>
         <div className="mb-7 flex items-center gap-4 sm:mb-9">
           <div className="min-w-0 flex-1">
             <RouteProgress
@@ -603,12 +751,20 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
               label={`Stap ${step + 1} van ${WIZARD_STEPS.length}: ${WIZARD_STEPS[step]}`}
             />
           </div>
-          <p className="figures shrink-0 text-sm text-steel-400" aria-hidden="true">
+          <p
+            className="figures shrink-0 text-sm text-steel-400"
+            aria-hidden="true"
+          >
             {step + 1} van {WIZARD_STEPS.length}
           </p>
         </div>
 
-        <AnimatePresence mode="wait" initial={false} custom={state.direction} onExitComplete={handleExitComplete}>
+        <AnimatePresence
+          mode="wait"
+          initial={false}
+          custom={state.direction}
+          onExitComplete={handleExitComplete}
+        >
           <motion.div
             key={step}
             ref={stepRef}
@@ -632,7 +788,11 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
               role="alert"
               className="mb-3 flex items-start gap-2 rounded-ui bg-bad/[0.08] px-3 py-2.5 text-[0.9375rem] leading-snug text-steel-50 ring-1 ring-bad/30"
             >
-              <WarningCircleIcon size={20} aria-hidden="true" className="mt-px shrink-0 text-bad" />
+              <WarningCircleIcon
+                size={20}
+                aria-hidden="true"
+                className="mt-px shrink-0 text-bad"
+              />
               <span>{error}</span>
             </p>
           )}
@@ -656,7 +816,11 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
                 <div className="min-w-0">
                   <p className="truncate text-xs text-steel-400 sm:text-sm">
                     {summary.label}
-                    {summary.detail && <span className="hidden min-[400px]:inline">, {summary.detail}</span>}
+                    {summary.detail && (
+                      <span className="hidden min-[400px]:inline">
+                        , {summary.detail}
+                      </span>
+                    )}
                   </p>
                   <p
                     key={summary.cents}
@@ -668,10 +832,15 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
               ) : step === 0 && modelName ? (
                 <div className="min-w-0">
                   <p className="text-xs text-steel-400 sm:text-sm">Toestel</p>
-                  <p className="truncate font-semibold text-steel-50">{modelName}</p>
+                  <p className="truncate font-semibold text-steel-50">
+                    {modelName}
+                  </p>
                 </div>
               ) : (
-                !canContinue && missing && <p className="truncate text-sm text-steel-400">{missing}</p>
+                !canContinue &&
+                missing && (
+                  <p className="truncate text-sm text-steel-400">{missing}</p>
+                )
               )}
             </div>
 

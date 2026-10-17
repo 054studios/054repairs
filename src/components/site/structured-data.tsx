@@ -25,7 +25,7 @@ export function BusinessSchema({
         "@id": absoluteUrl("/#bedrijf"),
         name: settings?.businessName || "054repairs",
         url: absoluteUrl("/"),
-        description: "iPhone-reparatie op locatie, in onze bus bij de klant.",
+        description: "iPhone-reparatie op locatie bij de klant.",
         areaServed: { "@type": "AdministrativeArea", name: "Regio Amsterdam" },
         ...(settings?.phone ? { telephone: settings.phone } : {}),
         ...(settings?.email ? { email: settings.email } : {}),

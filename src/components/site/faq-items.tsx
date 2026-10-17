@@ -1,11 +1,21 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { textLinkClass } from "@/components/ui/styles";
-import { depositPhrase, minutesLabel, refundText, travelSummary } from "./facts";
+import {
+  depositPhrase,
+  minutesLabel,
+  refundText,
+  travelSummary,
+} from "./facts";
 import { durationRange, type Catalogue, type PublicSettings } from "./data";
 
 export type FaqGroup = "boeken" | "reparatie";
-export type FaqItem = { id: string; group: FaqGroup; question: string; answer: ReactNode };
+export type FaqItem = {
+  id: string;
+  group: FaqGroup;
+  question: string;
+  answer: ReactNode;
+};
 
 export const faqGroups: { id: FaqGroup; title: string }[] = [
   { id: "reparatie", title: "De reparatie" },
@@ -14,7 +24,10 @@ export const faqGroups: { id: FaqGroup; title: string }[] = [
 
 // Answers that depend on prices or rules use the live values. Without them, a general answer is shown.
 // No warranty answer: the owner has not set a warranty term yet.
-export function buildFaq(settings: PublicSettings | null, catalogue: Catalogue | null): FaqItem[] {
+export function buildFaq(
+  settings: PublicSettings | null,
+  catalogue: Catalogue | null,
+): FaqItem[] {
   const travel = settings ? travelSummary(settings) : null;
   const range = catalogue ? durationRange(catalogue) : null;
 
@@ -24,7 +37,7 @@ export function buildFaq(settings: PublicSettings | null, catalogue: Catalogue |
       group: "reparatie",
       question: "Waar vindt de reparatie plaats?",
       answer:
-        "Bij jou in de buurt. Wij rijden naar het adres dat je opgeeft en repareren je iPhone ter plekke in onze bus. Zodra de reparatie klaar is, krijg je je toestel terug.",
+        "Bij jou in de buurt. Wij rijden naar het adres dat je opgeeft en repareren je iPhone op locatie. Zodra de reparatie klaar is, krijg je je toestel terug.",
     },
     {
       id: "duur",
@@ -64,7 +77,13 @@ export function buildFaq(settings: PublicSettings | null, catalogue: Catalogue |
       group: "boeken",
       question: "Wat kosten de voorrijkosten?",
       answer: travel
-        ? [travel.free, travel.over, travel.example, travel.max, "Het bedrag voor jouw adres zie je voordat je betaalt."]
+        ? [
+            travel.free,
+            travel.over,
+            travel.example,
+            travel.max,
+            "Het bedrag voor jouw adres zie je voordat je betaalt.",
+          ]
             .filter(Boolean)
             .join(" ")
         : "De voorrijkosten hangen af van de afstand tot je adres. Je ziet het bedrag voordat je betaalt.",
@@ -75,9 +94,12 @@ export function buildFaq(settings: PublicSettings | null, catalogue: Catalogue |
       question: "Hoe betaal ik?",
       answer: settings ? (
         <>
-          Bij het boeken betaal je {depositPhrase(settings)} online. Daarmee ligt je tijdstip vast. Het restbedrag
-          betaal je met pin of contant als je je iPhone terugkrijgt.
-          {settings.allowFullPrepay ? " Je kunt ook meteen het hele bedrag online betalen." : null}
+          Bij het boeken betaal je {depositPhrase(settings)} online. Daarmee
+          ligt je tijdstip vast. Het restbedrag betaal je met pin of contant als
+          je je iPhone terugkrijgt.
+          {settings.allowFullPrepay
+            ? " Je kunt ook meteen het hele bedrag online betalen."
+            : null}
         </>
       ) : (
         "Bij het boeken betaal je een aanbetaling online. Daarmee ligt je tijdstip vast. Het restbedrag betaal je met pin of contant als je je iPhone terugkrijgt."
@@ -90,7 +112,9 @@ export function buildFaq(settings: PublicSettings | null, catalogue: Catalogue |
       answer: (
         <>
           Ja, tot het moment dat je afspraak begint.{" "}
-          {settings ? `${refundText(settings)} ` : "Hoeveel je terugkrijgt, hangt af van het moment van annuleren. "}
+          {settings
+            ? `${refundText(settings)} `
+            : "Hoeveel je terugkrijgt, hangt af van het moment van annuleren. "}
           Lees de{" "}
           <Link href="/voorwaarden" className={textLinkClass}>
             voorwaarden

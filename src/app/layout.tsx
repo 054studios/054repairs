@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   robots: { index: indexingEnabled(), follow: true },
   title: "054repairs | iPhone-reparatie aan huis",
   description:
-    "Boek online een iPhone-reparatie. Wij rijden naar je toe, repareren ter plekke in de bus en je hebt je telefoon terug zodra de reparatie klaar is.",
+    "Boek online een iPhone-reparatie. Wij rijden naar je toe, repareren op locatie en je hebt je telefoon terug zodra de reparatie klaar is.",
   openGraph: {
     siteName: "054repairs",
     locale: "nl_NL",
@@ -37,10 +37,19 @@ export const viewport: Viewport = {
   colorScheme: "dark",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="nl" className={`${bricolage.variable} ${interTight.variable} h-full antialiased`}>
-      <body className="min-h-dvh bg-ink-950 font-sans text-steel-100">{children}</body>
+    <html
+      lang="nl"
+      className={`${bricolage.variable} ${interTight.variable} h-full antialiased`}
+    >
+      <body className="min-h-dvh bg-ink-950 font-sans text-steel-100">
+        {children}
+      </body>
     </html>
   );
 }

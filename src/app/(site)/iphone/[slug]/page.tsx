@@ -44,10 +44,9 @@ export default async function ModelPage({ params }: Props) {
           ]}
         />
         <p className="max-w-[65ch] leading-relaxed text-steel-300">
-          Wij rijden naar je adres en repareren je iPhone ter plekke in onze
-          bus. De prijzen hieronder gelden voor de reparatie; eventuele
-          voorrijkosten zie je voordat je betaalt. Maak vooraf een back-up van
-          je toestel.
+          Wij rijden naar je adres en repareren je iPhone op locatie. De prijzen
+          hieronder gelden voor de reparatie; eventuele voorrijkosten zie je
+          voordat je betaalt. Maak vooraf een back-up van je toestel.
         </p>
         <RepairPriceList catalogue={catalogue} modelId={model.id} />
       </Container>

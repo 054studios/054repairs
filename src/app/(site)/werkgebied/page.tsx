@@ -38,8 +38,7 @@ export default async function AreaPage() {
           <p className="mt-5 leading-relaxed text-steel-400">
             De afstand wordt berekend vanaf ons vertrekpunt. Een plaatsnaam
             alleen is daarom geen garantie: controleer je eigen adres. We
-            repareren ter plekke in onze bus; je hoeft niet naar een winkel te
-            reizen.
+            repareren op locatie; je hoeft niet naar een winkel te reizen.
           </p>
           <Link
             href="/hoe-het-werkt"

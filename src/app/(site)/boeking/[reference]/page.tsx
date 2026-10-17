@@ -1,7 +1,14 @@
+import Link from "next/link";
+import { Reschedule } from "@/components/booking/reschedule";
+import { documentsSchema } from "@/lib/operations";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense, type ReactNode } from "react";
-import { CalendarBlankIcon, DeviceMobileIcon, MapPinIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+  CalendarBlankIcon,
+  DeviceMobileIcon,
+  MapPinIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import {
   amsterdamDay,
   formatClock,
@@ -18,7 +25,12 @@ import {
 } from "@/lib/booking/labels";
 import { isValidReference } from "@/lib/booking/routing";
 import { bookingStatusSchema } from "@/lib/booking/schema";
-import { chipClass, panelTitleClass, skeletonClass, stepPanelClass } from "@/lib/booking/styles";
+import {
+  chipClass,
+  panelTitleClass,
+  skeletonClass,
+  stepPanelClass,
+} from "@/lib/booking/styles";
 import { formatEuro } from "@/lib/money";
 import { isMollieConfigured } from "@/lib/payments/mollie";
 import { createClient } from "@/lib/supabase/server";
@@ -34,12 +46,16 @@ export const instant = false;
 export const metadata: Metadata = {
   // The (site) layout adds " | 054repairs".
   title: "Je afspraak",
+  referrer: "no-referrer",
   robots: { index: false, follow: false },
 };
 
 type StatusPageProps = {
   params: Promise<{ reference: string }>;
-  searchParams: Promise<{ t?: string | string[]; betaling?: string | string[] }>;
+  searchParams: Promise<{
+    t?: string | string[];
+    betaling?: string | string[];
+  }>;
 };
 
 const headingClass =
@@ -75,7 +91,8 @@ async function BookingStatusView({ params, searchParams }: StatusPageProps) {
   if (error) {
     return (
       <Message title="Je afspraak kan nu niet worden geladen">
-        Je boeking blijft gewoon staan. Probeer het over een paar minuten opnieuw met dezelfde link.
+        Je boeking blijft gewoon staan. Probeer het over een paar minuten
+        opnieuw met dezelfde link.
       </Message>
     );
   }
@@ -88,39 +105,70 @@ async function BookingStatusView({ params, searchParams }: StatusPageProps) {
   }
 
   const booking = parsed.data;
+  const { data: rawDocs, error: docsError } = await supabase.rpc(
+    "booking_documents",
+    { p_reference: reference, p_token: token },
+  );
+  const docs = documentsSchema.safeParse(rawDocs);
   const paymentReady = await isMollieConfigured().catch(() => false);
   // Request time: the started check must not be prerendered.
   await connection();
 
   const isFinal = FINAL_STATUSES.includes(booking.status);
-  const offRoute = booking.status === "cancelled" || booking.status === "expired";
+  const offRoute =
+    booking.status === "cancelled" || booking.status === "expired";
   const canCancel = !isFinal && !hasBookingStarted(booking.startsAt);
-  const openDepositCents = Math.max(0, booking.depositCents - booking.paidCents);
+  const openDepositCents = Math.max(
+    0,
+    booking.depositCents - booking.paidCents,
+  );
   const restCents = Math.max(0, booking.totalCents - booking.depositCents);
-  const canPay = !isFinal && booking.paymentStatus === "unpaid" && paymentReady && openDepositCents > 0;
-  const durationMinutes = Math.round((Date.parse(booking.endsAt) - Date.parse(booking.startsAt)) / 60_000);
+  const canPay =
+    !isFinal &&
+    booking.paymentStatus === "unpaid" &&
+    paymentReady &&
+    openDepositCents > 0;
+  const durationMinutes = Math.round(
+    (Date.parse(booking.endsAt) - Date.parse(booking.startsAt)) / 60_000,
+  );
   const startDay = amsterdamDay(new Date(booking.startsAt));
 
   return (
     <div className="space-y-5">
       <header>
-        <h1 className={`${headingClass} outline-none`} tabIndex={-1} data-status-heading>
+        <h1
+          className={`${headingClass} outline-none`}
+          tabIndex={-1}
+          data-status-heading
+        >
           {APPOINTMENT_STATUS_HEADLINES[booking.status] ?? "Je afspraak"}
         </h1>
-        <FocusHeadingAfterCancel key={booking.status} reference={booking.reference} />
+        <FocusHeadingAfterCancel
+          key={booking.status}
+          reference={booking.reference}
+        />
         <p className="mt-3 text-base text-steel-400">
-          Referentie <span className="figures font-medium text-steel-100">{booking.reference}</span>
+          Referentie{" "}
+          <span className="figures font-medium text-steel-100">
+            {booking.reference}
+          </span>
         </p>
         <p className="mt-3">
-          <span className={chipClass(PAYMENT_STATUS_TONES[booking.paymentStatus] ?? "neutral")}>
-            {PAYMENT_STATUS_LABELS[booking.paymentStatus] ?? booking.paymentStatus}
+          <span
+            className={chipClass(
+              PAYMENT_STATUS_TONES[booking.paymentStatus] ?? "neutral",
+            )}
+          >
+            {PAYMENT_STATUS_LABELS[booking.paymentStatus] ??
+              booking.paymentStatus}
           </span>
         </p>
       </header>
 
       {paymentFailed && !isFinal && (
         <Notice tone="warn" title="De betaling is niet gestart">
-          Je boeking is wel vastgelegd. Probeer het opnieuw met de betaalknop hieronder.
+          Je boeking is wel vastgelegd. Probeer het opnieuw met de betaalknop
+          hieronder.
         </Notice>
       )}
 
@@ -133,7 +181,11 @@ async function BookingStatusView({ params, searchParams }: StatusPageProps) {
       {offRoute ? (
         <Notice
           tone="bad"
-          title={booking.status === "cancelled" ? "Deze afspraak gaat niet door" : "De betaling is niet op tijd afgerond"}
+          title={
+            booking.status === "cancelled"
+              ? "Deze afspraak gaat niet door"
+              : "De betaling is niet op tijd afgerond"
+          }
         >
           {booking.status === "cancelled"
             ? booking.paidCents > 0
@@ -157,25 +209,41 @@ async function BookingStatusView({ params, searchParams }: StatusPageProps) {
           Afspraak
         </h2>
         <dl className="mt-2 divide-y divide-line">
-          <DetailRow icon={<CalendarBlankIcon size={20} aria-hidden="true" />} label="Wanneer">
-            <p className="font-medium text-steel-50">{formatDayLong(startDay)}</p>
+          <DetailRow
+            icon={<CalendarBlankIcon size={20} aria-hidden="true" />}
+            label="Wanneer"
+          >
+            <p className="font-medium text-steel-50">
+              {formatDayLong(startDay)}
+            </p>
             <p className="figures text-steel-300">
-              Van {formatClock(booking.startsAt)} tot {formatClock(booking.endsAt)}
+              Van {formatClock(booking.startsAt)} tot{" "}
+              {formatClock(booking.endsAt)}
             </p>
             <p className="mt-1 text-sm text-steel-400">
-              Tijdslot van <span className="figures">{formatDuration(durationMinutes)}</span>. Zodra de reparatietijd voorbij
-              is, heb je je toestel terug.
+              Tijdslot van{" "}
+              <span className="figures">{formatDuration(durationMinutes)}</span>
+              . Zodra de reparatietijd voorbij is, heb je je toestel terug.
             </p>
           </DetailRow>
-          <DetailRow icon={<MapPinIcon size={20} aria-hidden="true" />} label="Adres">
+          <DetailRow
+            icon={<MapPinIcon size={20} aria-hidden="true" />}
+            label="Adres"
+          >
             <p className="break-words text-steel-100">
               {booking.street} {booking.houseNumber}
             </p>
             <p className="text-steel-300">
-              <span className="figures">{formatPostcode(booking.postcode)}</span> {booking.city}
+              <span className="figures">
+                {formatPostcode(booking.postcode)}
+              </span>{" "}
+              {booking.city}
             </p>
           </DetailRow>
-          <DetailRow icon={<DeviceMobileIcon size={20} aria-hidden="true" />} label="Toestel">
+          <DetailRow
+            icon={<DeviceMobileIcon size={20} aria-hidden="true" />}
+            label="Toestel"
+          >
             <p className="break-words text-steel-100">{booking.modelLabel}</p>
           </DetailRow>
         </dl>
@@ -185,7 +253,9 @@ async function BookingStatusView({ params, searchParams }: StatusPageProps) {
         lines={booking.items.map((item) => ({
           key: item.repairTypeId,
           name: item.name,
-          detail: [item.qualityName, formatDuration(item.durationMinutes)].filter(Boolean).join(", "),
+          detail: [item.qualityName, formatDuration(item.durationMinutes)]
+            .filter(Boolean)
+            .join(", "),
           cents: item.priceCents,
         }))}
         travelCents={booking.travelFeeCents}
@@ -194,12 +264,20 @@ async function BookingStatusView({ params, searchParams }: StatusPageProps) {
         <AmountRow label="Betaald" cents={booking.paidCents} strong />
         {openDepositCents > 0 && !offRoute && (
           <AmountRow
-            label={booking.paymentChoice === "full" ? "Nog te betalen, vooraf" : "Nog te betalen, aanbetaling"}
+            label={
+              booking.paymentChoice === "full"
+                ? "Nog te betalen, vooraf"
+                : "Nog te betalen, aanbetaling"
+            }
             cents={openDepositCents}
           />
         )}
         {restCents > 0 && !offRoute && (
-          <AmountRow label="Bij oplevering" detail="Met pin of contant" cents={restCents} />
+          <AmountRow
+            label="Bij oplevering"
+            detail="Met pin of contant"
+            cents={restCents}
+          />
         )}
       </Receipt>
 
@@ -209,15 +287,44 @@ async function BookingStatusView({ params, searchParams }: StatusPageProps) {
             Betaling staat nog open
           </h2>
           <p className="mt-2 text-[0.9375rem] leading-relaxed text-steel-300">
-            {booking.paymentChoice === "full" ? "Betaal" : "Betaal de aanbetaling van"}{" "}
-            <span className="figures">{formatEuro(openDepositCents)}</span> om je afspraak te bevestigen.
+            {booking.paymentChoice === "full"
+              ? "Betaal"
+              : "Betaal de aanbetaling van"}{" "}
+            <span className="figures">{formatEuro(openDepositCents)}</span> om
+            je afspraak te bevestigen.
           </p>
           <div className="mt-4">
-            <PayButton reference={booking.reference} token={token} label={`Betaal ${formatEuro(openDepositCents)}`} />
+            <PayButton
+              reference={booking.reference}
+              token={token}
+              label={`Betaal ${formatEuro(openDepositCents)}`}
+            />
           </div>
         </section>
       )}
 
+      {!docsError && docs.success && (
+        <section className={stepPanelClass}>
+          <h2 className={panelTitleClass}>Je afspraak beheren</h2>
+          <div className="mt-4 space-y-5">
+            {["new", "confirmed"].includes(booking.status) && (
+              <Reschedule reference={reference} token={token} />
+            )}{" "}
+            {(docs.data.report || docs.data.invoice) && (
+              <Link
+                className="inline-flex min-h-11 items-center text-cyan-300 underline"
+                href={
+                  "/documenten/" + reference + "?t=" + encodeURIComponent(token)
+                }
+                target="_blank"
+                rel="noreferrer"
+              >
+                Reparatierapport en factuur openen
+              </Link>
+            )}
+          </div>
+        </section>
+      )}
       {canCancel && (
         <section className={stepPanelClass} aria-labelledby="cancel-title">
           <h2 id="cancel-title" className={panelTitleClass}>
@@ -233,13 +340,23 @@ async function BookingStatusView({ params, searchParams }: StatusPageProps) {
   );
 }
 
-function DetailRow({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) {
+function DetailRow({
+  icon,
+  label,
+  children,
+}: {
+  icon: ReactNode;
+  label: string;
+  children: ReactNode;
+}) {
   return (
     <div className="flex gap-3.5 py-4 last:pb-1">
       <span className="mt-0.5 shrink-0 text-cyan-400">{icon}</span>
       <div className="min-w-0 flex-1">
         <dt className="text-sm text-steel-400">{label}</dt>
-        <dd className="mt-1 space-y-0.5 text-[0.9375rem] leading-relaxed">{children}</dd>
+        <dd className="mt-1 space-y-0.5 text-[0.9375rem] leading-relaxed">
+          {children}
+        </dd>
       </div>
     </div>
   );
@@ -249,7 +366,9 @@ function Message({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className={stepPanelClass}>
       <h1 className={headingClass}>{title}</h1>
-      <p className="mt-3 text-base leading-relaxed text-steel-400">{children}</p>
+      <p className="mt-3 text-base leading-relaxed text-steel-400">
+        {children}
+      </p>
     </section>
   );
 }
@@ -257,8 +376,9 @@ function Message({ title, children }: { title: string; children: ReactNode }) {
 function InvalidLink() {
   return (
     <Message title="Deze link klopt niet">
-      Gebruik de volledige link uit je bevestiging, inclusief alles na het vraagteken. Lukt het nog steeds niet? Neem
-      dan contact met ons op en noem je referentie.
+      Gebruik de volledige link uit je bevestiging, inclusief alles na het
+      vraagteken. Lukt het nog steeds niet? Neem dan contact met ons op en noem
+      je referentie.
     </Message>
   );
 }

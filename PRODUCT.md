@@ -14,13 +14,13 @@ Second user: the owner, the only admin. He manages bookings, prices, travel fees
 
 ## Product Purpose
 
-054repairs repairs phones at the customer's location. The customer books online: device, repair, address, time slot, details, then pays a deposit or the full amount. The repairer drives to the customer, repairs the phone on the spot in his car or van, and hands it back when the repair time is over. The rest is paid by PIN or cash at handover.
+054repairs repairs phones at the customer's location. The customer books online: device, repair, address, time slot, details, then pays a deposit or the full amount. The repairer drives to the customer, repairs the phone on the spot at the agreed location, and hands it back when the repair time is over. The rest is paid by PIN or cash at handover.
 
 Success means: a customer completes a booking with a deposit, so the repairer never drives for nothing.
 
 ## Positioning
 
-- The repair comes to you. The phone is repaired on the spot, in the repairer's car or van, close to the customer.
+- The repair comes to you. The phone is repaired on the spot, close to the customer, without publicly naming a vehicle.
 - The device is back when the repair time is over. The slot length equals the repair duration.
 - Fixed repair price before booking. Travel costs only above the free radius (50 km by default), per km, both configurable.
 

@@ -1,11 +1,28 @@
+import { AppointmentOperations } from "@/components/admin/appointment-operations";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CreditCardIcon, MapPinIcon, MoneyIcon, PhoneIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+  CreditCardIcon,
+  MapPinIcon,
+  MoneyIcon,
+  PhoneIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import { ActionForm } from "@/components/admin/action-form";
-import { AffixInput, Card, CardSection, Field, Select } from "@/components/admin/fields";
+import {
+  AffixInput,
+  Card,
+  CardSection,
+  Field,
+  Select,
+} from "@/components/admin/fields";
 import { Notice } from "@/components/admin/notice";
 import { PageHeader } from "@/components/admin/page-header";
-import { buttonClass, insetClass, labelClass, textLinkClass } from "@/components/ui/styles";
+import {
+  buttonClass,
+  insetClass,
+  labelClass,
+  textLinkClass,
+} from "@/components/ui/styles";
 import { formatDuration, formatKm, formatPostcode } from "@/lib/booking/format";
 import { requireAdmin } from "@/lib/auth";
 import { centsToEuroInput, formatEuro } from "@/lib/money";
@@ -68,11 +85,27 @@ const PAYMENT_METHODS = [
   { value: "cash", label: "Contant", Icon: MoneyIcon },
 ] as const;
 
-function Detail({ label, strong = false, children }: { label: string; strong?: boolean; children: React.ReactNode }) {
+function Detail({
+  label,
+  strong = false,
+  children,
+}: {
+  label: string;
+  strong?: boolean;
+  children: React.ReactNode;
+}) {
   return (
-    <div className={`flex items-baseline justify-between gap-4 py-2.5 ${strong ? "border-t border-line-strong" : ""}`}>
-      <dt className={`shrink-0 text-sm ${strong ? "font-medium text-steel-100" : "text-steel-400"}`}>{label}</dt>
-      <dd className={`min-w-0 text-right text-[0.95rem] text-steel-50 ${strong ? "font-semibold" : "font-medium"}`}>
+    <div
+      className={`flex items-baseline justify-between gap-4 py-2.5 ${strong ? "border-t border-line-strong" : ""}`}
+    >
+      <dt
+        className={`shrink-0 text-sm ${strong ? "font-medium text-steel-100" : "text-steel-400"}`}
+      >
+        {label}
+      </dt>
+      <dd
+        className={`min-w-0 text-right text-[0.95rem] text-steel-50 ${strong ? "font-semibold" : "font-medium"}`}
+      >
         {children}
       </dd>
     </div>
@@ -91,22 +124,33 @@ export default async function AppointmentDetailPage({
     notFound();
   }
 
-  const [{ data: appointment, error }, { data: payments }, mollieReady] = await Promise.all([
-    supabase.from("appointments").select(APPOINTMENT_COLUMNS).eq("id", id).maybeSingle(),
-    supabase
-      .from("payments")
-      .select("id, kind, amount_cents, method, provider, status, paid_at, created_at")
-      .eq("appointment_id", id)
-      .order("created_at", { ascending: true }),
-    isMollieConfigured(),
-  ]);
+  const [{ data: appointment, error }, { data: payments }, mollieReady] =
+    await Promise.all([
+      supabase
+        .from("appointments")
+        .select(APPOINTMENT_COLUMNS)
+        .eq("id", id)
+        .maybeSingle(),
+      supabase
+        .from("payments")
+        .select(
+          "id, kind, amount_cents, method, provider, status, paid_at, created_at",
+        )
+        .eq("appointment_id", id)
+        .order("created_at", { ascending: true }),
+      isMollieConfigured(),
+    ]);
 
   if (error) {
     return (
       <div>
-        <PageHeader title="Afspraak" back={{ href: "/admin/afspraken", label: "Alle afspraken" }} />
+        <PageHeader
+          title="Afspraak"
+          back={{ href: "/admin/afspraken", label: "Alle afspraken" }}
+        />
         <Notice tone="bad" role="alert">
-          De afspraak kon niet worden geladen. Ververs de pagina om het opnieuw te proberen.
+          De afspraak kon niet worden geladen. Ververs de pagina om het opnieuw
+          te proberen.
         </Notice>
       </div>
     );
@@ -116,10 +160,15 @@ export default async function AppointmentDetailPage({
     notFound();
   }
 
-  const items: Item[] = Array.isArray(appointment.items) ? appointment.items : [];
+  const items: Item[] = Array.isArray(appointment.items)
+    ? appointment.items
+    : [];
   const history: PaymentRow[] = payments ?? [];
   const inactive = isInactive(appointment.status);
-  const outstanding = outstandingCents(appointment.total_cents, appointment.paid_cents);
+  const outstanding = outstandingCents(
+    appointment.total_cents,
+    appointment.paid_cents,
+  );
   const fullyPaid = outstanding <= 0;
   const address = `${appointment.street} ${appointment.house_number}, ${formatPostcode(appointment.postcode)} ${appointment.city}`;
   const mapsHref = mapsSearchHref(address);
@@ -138,11 +187,19 @@ export default async function AppointmentDetailPage({
       >
         {/* On the road: call and navigate in one tap. The rail layout shows these in the client card. */}
         <div className="mt-4 grid grid-cols-2 gap-2 sm:flex xl:hidden">
-          <a href={telHref(appointment.customer_phone)} className={buttonClass("secondary")}>
+          <a
+            href={telHref(appointment.customer_phone)}
+            className={buttonClass("secondary")}
+          >
             <PhoneIcon aria-hidden="true" className="size-5" />
             Bel klant
           </a>
-          <a href={mapsHref} target="_blank" rel="noopener noreferrer" className={buttonClass("secondary")}>
+          <a
+            href={mapsHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={buttonClass("secondary")}
+          >
             <MapPinIcon aria-hidden="true" className="size-5" />
             Route
           </a>
@@ -150,7 +207,11 @@ export default async function AppointmentDetailPage({
       </PageHeader>
 
       {appointment.cancelled_at && (
-        <Notice tone="bad" title={`Geannuleerd op ${formatShopDateTime(appointment.cancelled_at)}`} className="mb-6">
+        <Notice
+          tone="bad"
+          title={`Geannuleerd op ${formatShopDateTime(appointment.cancelled_at)}`}
+          className="mb-6"
+        >
           {appointment.cancel_reason || undefined}
         </Notice>
       )}
@@ -191,7 +252,8 @@ export default async function AppointmentDetailPage({
           >
             {inactive ? (
               <p className="text-[0.95rem] text-steel-400">
-                Op een geannuleerde of verlopen afspraak registreer je geen betaling.
+                Op een geannuleerde of verlopen afspraak registreer je geen
+                betaling.
               </p>
             ) : fullyPaid ? (
               <Notice tone="ok">Deze afspraak is volledig betaald.</Notice>
@@ -202,7 +264,10 @@ export default async function AppointmentDetailPage({
                 variant="secondary"
               >
                 <div className="space-y-4">
-                  <Field label="Bedrag" hint={`Openstaand: ${formatEuro(outstanding)}`}>
+                  <Field
+                    label="Bedrag"
+                    hint={`Openstaand: ${formatEuro(outstanding)}`}
+                  >
                     <AffixInput
                       name="amount"
                       prefix="€"
@@ -238,7 +303,9 @@ export default async function AppointmentDetailPage({
             {!inactive && !fullyPaid && (
               <CardSection title="Betaallink via Mollie">
                 {mollieReady ? (
-                  <MollieLinkForm action={createBalancePaymentLink.bind(null, appointment.id)} />
+                  <MollieLinkForm
+                    action={createBalancePaymentLink.bind(null, appointment.id)}
+                  />
                 ) : (
                   <p className="text-sm text-steel-400">
                     Mollie is nog niet ingesteld.{" "}
@@ -258,19 +325,27 @@ export default async function AppointmentDetailPage({
               <dl className="-my-2.5 divide-y divide-line">
                 <Detail label="Naam">{appointment.customer_name}</Detail>
                 <Detail label="Telefoon">
-                  <a href={telHref(appointment.customer_phone)} className={`${textLinkClass} figures`}>
+                  <a
+                    href={telHref(appointment.customer_phone)}
+                    className={`${textLinkClass} figures`}
+                  >
                     {appointment.customer_phone}
                   </a>
                 </Detail>
                 <Detail label="E-mail">
-                  <a href={`mailto:${appointment.customer_email}`} className={`${textLinkClass} break-all`}>
+                  <a
+                    href={`mailto:${appointment.customer_email}`}
+                    className={`${textLinkClass} break-all`}
+                  >
                     {appointment.customer_email}
                   </a>
                 </Detail>
               </dl>
               {appointment.customer_note && (
                 <div className={`${insetClass} mt-4 p-3`}>
-                  <p className="text-sm font-medium text-steel-300">Opmerking van de klant</p>
+                  <p className="text-sm font-medium text-steel-300">
+                    Opmerking van de klant
+                  </p>
                   <p className="mt-1 whitespace-pre-line text-[0.95rem] leading-relaxed text-steel-100">
                     {appointment.customer_note}
                   </p>
@@ -281,21 +356,34 @@ export default async function AppointmentDetailPage({
             <Card title="Tijd en adres">
               <dl className="-my-2.5 divide-y divide-line">
                 <Detail label="Start">
-                  <span className="figures">{formatShopDateTime(appointment.starts_at)}</span>
+                  <span className="figures">
+                    {formatShopDateTime(appointment.starts_at)}
+                  </span>
                 </Detail>
                 <Detail label="Klaar">
-                  <span className="figures">{formatShopDateTime(appointment.ends_at)}</span>
+                  <span className="figures">
+                    {formatShopDateTime(appointment.ends_at)}
+                  </span>
                 </Detail>
-                <Detail label="Duur">{formatDuration(appointment.duration_minutes)}</Detail>
+                <Detail label="Duur">
+                  {formatDuration(appointment.duration_minutes)}
+                </Detail>
                 <Detail label="Adres">
-                  <a href={mapsHref} target="_blank" rel="noopener noreferrer" className={textLinkClass}>
+                  <a
+                    href={mapsHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={textLinkClass}
+                  >
                     {appointment.street} {appointment.house_number}
                     <br />
                     {formatPostcode(appointment.postcode)} {appointment.city}
                   </a>
                 </Detail>
                 <Detail label="Afstand">
-                  <span className="figures">{formatKm(Number(appointment.travel_km))}</span>
+                  <span className="figures">
+                    {formatKm(Number(appointment.travel_km))}
+                  </span>
                 </Detail>
               </dl>
             </Card>
@@ -305,23 +393,38 @@ export default async function AppointmentDetailPage({
         <div className="@container space-y-4 xl:col-start-1 xl:row-span-2 xl:row-start-2 xl:space-y-6">
           <Card title="Reparaties" description={appointment.model_label}>
             {items.length === 0 ? (
-              <p className="text-[0.95rem] text-steel-400">Geen reparaties vastgelegd.</p>
+              <p className="text-[0.95rem] text-steel-400">
+                Geen reparaties vastgelegd.
+              </p>
             ) : (
               <ul className="-my-3 divide-y divide-line">
                 {items.map((item, index) => {
                   const meta = [
                     item.qualityName,
-                    typeof item.durationMinutes === "number" ? formatDuration(item.durationMinutes) : undefined,
+                    typeof item.durationMinutes === "number"
+                      ? formatDuration(item.durationMinutes)
+                      : undefined,
                   ].filter(Boolean);
 
                   return (
-                    <li key={index} className="flex items-start justify-between gap-4 py-3">
+                    <li
+                      key={index}
+                      className="flex items-start justify-between gap-4 py-3"
+                    >
                       <div className="min-w-0">
-                        <p className="font-medium text-steel-50">{item.name ?? "Reparatie"}</p>
-                        {meta.length > 0 && <p className="text-sm text-steel-400">{meta.join(", ")}</p>}
+                        <p className="font-medium text-steel-50">
+                          {item.name ?? "Reparatie"}
+                        </p>
+                        {meta.length > 0 && (
+                          <p className="text-sm text-steel-400">
+                            {meta.join(", ")}
+                          </p>
+                        )}
                       </div>
                       <p className="figures shrink-0 font-medium text-steel-50">
-                        {typeof item.priceCents === "number" ? formatEuro(item.priceCents) : "Onbekend"}
+                        {typeof item.priceCents === "number"
+                          ? formatEuro(item.priceCents)
+                          : "Onbekend"}
                       </p>
                     </li>
                   );
@@ -340,43 +443,76 @@ export default async function AppointmentDetailPage({
               }
             >
               <dl className="-my-2.5 figures">
-                <Detail label="Reparaties">{formatEuro(appointment.repair_total_cents)}</Detail>
-                <Detail label="Voorrijkosten">{formatEuro(appointment.travel_fee_cents)}</Detail>
+                <Detail label="Reparaties">
+                  {formatEuro(appointment.repair_total_cents)}
+                </Detail>
+                <Detail label="Voorrijkosten">
+                  {formatEuro(appointment.travel_fee_cents)}
+                </Detail>
                 <Detail label="Totaal" strong>
                   {formatEuro(appointment.total_cents)}
                 </Detail>
-                <Detail label="Aanbetaling bij boeken">{formatEuro(appointment.deposit_cents)}</Detail>
-                <Detail label="Betaald">{formatEuro(appointment.paid_cents)}</Detail>
+                <Detail label="Aanbetaling bij boeken">
+                  {formatEuro(appointment.deposit_cents)}
+                </Detail>
+                <Detail label="Betaald">
+                  {formatEuro(appointment.paid_cents)}
+                </Detail>
                 <Detail label="Openstaand">
-                  <span className={fullyPaid ? "text-ok" : undefined}>{fullyPaid ? "Niets" : formatEuro(outstanding)}</span>
+                  <span className={fullyPaid ? "text-ok" : undefined}>
+                    {fullyPaid ? "Niets" : formatEuro(outstanding)}
+                  </span>
                 </Detail>
                 <Detail label="Betaalstatus">
-                  <span className={paymentStatusBadgeClass(appointment.payment_status)}>
-                    {PAYMENT_STATUS_LABEL[appointment.payment_status] ?? appointment.payment_status}
+                  <span
+                    className={paymentStatusBadgeClass(
+                      appointment.payment_status,
+                    )}
+                  >
+                    {PAYMENT_STATUS_LABEL[appointment.payment_status] ??
+                      appointment.payment_status}
                   </span>
                 </Detail>
               </dl>
             </Card>
 
-            <Card title="Betalingen" description="Alle betalingen voor deze afspraak.">
+            <Card
+              title="Betalingen"
+              description="Alle betalingen voor deze afspraak."
+            >
               {history.length === 0 ? (
-                <p className="text-[0.95rem] text-steel-400">Nog geen betalingen.</p>
+                <p className="text-[0.95rem] text-steel-400">
+                  Nog geen betalingen.
+                </p>
               ) : (
                 <ul className="-my-3 divide-y divide-line">
                   {history.map((payment) => (
-                    <li key={payment.id} className="flex items-start justify-between gap-3 py-3">
+                    <li
+                      key={payment.id}
+                      className="flex items-start justify-between gap-3 py-3"
+                    >
                       <div className="min-w-0">
                         <p className="font-medium text-steel-50">
-                          {KIND_LABEL[payment.kind] ?? payment.kind} via {PROVIDER_LABEL[payment.provider] ?? payment.provider}
+                          {KIND_LABEL[payment.kind] ?? payment.kind} via{" "}
+                          {PROVIDER_LABEL[payment.provider] ?? payment.provider}
                         </p>
                         <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-steel-400">
-                          <span className="figures">{formatShopDateTime(payment.paid_at ?? payment.created_at)}</span>
-                          <span className={paymentRecordBadgeClass(payment.status)}>
-                            {PAYMENT_STATUS_RECORD_LABEL[payment.status] ?? payment.status}
+                          <span className="figures">
+                            {formatShopDateTime(
+                              payment.paid_at ?? payment.created_at,
+                            )}
+                          </span>
+                          <span
+                            className={paymentRecordBadgeClass(payment.status)}
+                          >
+                            {PAYMENT_STATUS_RECORD_LABEL[payment.status] ??
+                              payment.status}
                           </span>
                         </p>
                       </div>
-                      <span className="figures shrink-0 font-medium text-steel-50">{formatEuro(payment.amount_cents)}</span>
+                      <span className="figures shrink-0 font-medium text-steel-50">
+                        {formatEuro(payment.amount_cents)}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -387,7 +523,10 @@ export default async function AppointmentDetailPage({
 
         {!inactive && (
           <div className="xl:col-start-2 xl:row-start-3">
-            <Card title="Annuleren" description="Het tijdslot komt dan weer vrij. Een terugbetaling regel je zelf.">
+            <Card
+              title="Annuleren"
+              description="Het tijdslot komt dan weer vrij. Een terugbetaling regel je zelf."
+            >
               <ConfirmActionForm
                 action={cancelAppointment.bind(null, appointment.id)}
                 label="Annuleer afspraak"
@@ -399,6 +538,10 @@ export default async function AppointmentDetailPage({
           </div>
         )}
       </div>
+      <AppointmentOperations
+        id={appointment.id}
+        reference={appointment.reference}
+      />
     </div>
   );
 }

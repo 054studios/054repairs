@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   title: "Online een reparatie boeken",
   robots: { index: false, follow: true },
   description:
-    "Boek in een paar stappen een iPhone-reparatie bij jou in de buurt. Wij rijden naar je toe en repareren ter plekke in de bus.",
+    "Boek in een paar stappen een iPhone-reparatie bij jou in de buurt. Wij rijden naar je toe en repareren op locatie.",
 };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
