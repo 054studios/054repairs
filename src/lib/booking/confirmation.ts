@@ -34,7 +34,7 @@ export async function sendBookingConfirmation(input: Confirmation): Promise<void
     const toPay = input.paymentChoice === "full" ? input.totalCents : input.depositCents;
     const payLine = input.paymentPending
       ? `Betaal ${formatEuro(toPay)} via de betaallink op je afsprakenpagina.`
-      : `Je betaalt ${formatEuro(toPay)} nu. De rest betaal je met pin of contant bij het terugbrengen van je toestel.`;
+      : "Online betalen is nog niet actief. Er is via deze boeking geen online betaling gedaan.";
 
     const text = [
       `Hoi ${input.customerName},`,
@@ -52,13 +52,14 @@ export async function sendBookingConfirmation(input: Confirmation): Promise<void
 <p>${escapeHtml(payLine)}</p>
 <p><a href="${escapeHtml(link)}">Bekijk of wijzig je afspraak</a></p>`;
 
-    await sendEmail({
+    const result = await sendEmail({
       to: input.to,
       subject: `Bevestiging afspraak ${input.reference}`,
       text,
       html,
     });
+    if (!result.sent) console.error("Boekingsbevestiging niet verstuurd", result.reason);
   } catch {
-    // Intentionally silent: the booking is already stored.
+    console.error("Boekingsbevestiging kon niet worden samengesteld");
   }
 }

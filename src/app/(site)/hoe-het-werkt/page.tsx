@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { pageMetadata } from "@/components/site/seo";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { getCatalogue, getPublicSettings, durationRange } from "@/components/site/data";
@@ -10,11 +10,7 @@ import { displayClass, textLinkClass } from "@/components/ui/styles";
 // The booking details, deposit text and durations come from the database on each request.
 export const instant = false;
 
-export const metadata: Metadata = {
-  title: "Hoe het werkt",
-  description:
-    "Van je boeking tot je iPhone weer in je hand ligt. Wij rijden naar je toe en repareren ter plekke in onze bus.",
-};
+export const metadata = pageMetadata("Zo werkt iPhone-reparatie aan huis", "Van online boeken tot reparatie voor je deur: bekijk de werkwijze, betaling en voorrijkosten van 054repairs.", "/hoe-het-werkt");
 
 export default async function HowItWorksPage() {
   const [settings, catalogue] = await Promise.all([getPublicSettings(), getCatalogue()]);

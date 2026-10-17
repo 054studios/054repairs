@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { pageMetadata } from "@/components/site/seo";
 import Link from "next/link";
 import { getCatalogue, getPublicSettings } from "@/components/site/data";
 import { buildFaq, faqGroups } from "@/components/site/faq-items";
@@ -9,10 +9,7 @@ import { displayClass, textLinkClass } from "@/components/ui/styles";
 // Answers use the live settings and catalogue, read on each request.
 export const instant = false;
 
-export const metadata: Metadata = {
-  title: "Veelgestelde vragen",
-  description: "Antwoorden over de reparatie in de bus, de duur, de voorrijkosten, betalen en annuleren.",
-};
+export const metadata = pageMetadata("Veelgestelde vragen over iPhone-reparatie", "Antwoorden over iPhone-reparatie op locatie, onderdelen, voorrijkosten, betalen en je afspraak.", "/faq");
 
 export default async function FaqPage() {
   const [settings, catalogue] = await Promise.all([getPublicSettings(), getCatalogue()]);

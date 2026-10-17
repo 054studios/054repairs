@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { safely, savedResult, type ActionResult } from "@/lib/action-result";
 import { amsterdamLocalToIso } from "@/lib/time";
@@ -63,6 +63,7 @@ export async function saveSlotSettings(_prev: ActionResult | null, formData: For
 
     if (error) throw new Error("Opslaan is mislukt.");
 
+    updateTag("public-settings");
     revalidatePath(PATH);
     return savedResult;
   });
@@ -75,6 +76,7 @@ export async function addWorkHour(_prev: ActionResult | null, formData: FormData
     const { error } = await supabase.from("work_hours").insert({ ...workHourFields(formData), active: true });
     if (error) throw new Error("Opslaan is mislukt.");
 
+    updateTag("public-settings");
     revalidatePath(PATH);
     return savedResult;
   });
@@ -91,6 +93,7 @@ export async function updateWorkHour(id: string, _prev: ActionResult | null, for
 
     if (error) throw new Error("Opslaan is mislukt.");
 
+    updateTag("public-settings");
     revalidatePath(PATH);
     return savedResult;
   });
@@ -99,7 +102,8 @@ export async function updateWorkHour(id: string, _prev: ActionResult | null, for
 export async function deleteWorkHour(id: string): Promise<void> {
   const { supabase } = await requireAdmin();
   await supabase.from("work_hours").delete().eq("id", id);
-  revalidatePath(PATH);
+  updateTag("public-settings");
+    revalidatePath(PATH);
 }
 
 export async function addBlockedPeriod(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
@@ -121,6 +125,7 @@ export async function addBlockedPeriod(_prev: ActionResult | null, formData: For
 
     if (error) throw new Error("Opslaan is mislukt.");
 
+    updateTag("public-settings");
     revalidatePath(PATH);
     return savedResult;
   });
@@ -129,5 +134,6 @@ export async function addBlockedPeriod(_prev: ActionResult | null, formData: For
 export async function deleteBlockedPeriod(id: string): Promise<void> {
   const { supabase } = await requireAdmin();
   await supabase.from("blocked_periods").delete().eq("id", id);
-  revalidatePath(PATH);
+  updateTag("public-settings");
+    revalidatePath(PATH);
 }

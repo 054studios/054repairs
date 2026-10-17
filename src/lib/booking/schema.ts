@@ -10,6 +10,7 @@ export const customerSchema = z.object({
   phone: z
     .string()
     .trim()
+    .max(40, "Controleer je telefoonnummer.")
     .refine((value) => value.replace(/\D/g, "").length >= 6, "Vul een geldig telefoonnummer in."),
   email: z
     .string()
@@ -32,6 +33,7 @@ export const addressSchema = z.object({
 });
 
 export const bookingPayloadSchema = z.object({
+  website: z.string().max(0, "Boeken lukt niet. Neem contact met ons op.").optional(),
   modelId: idSchema,
   items: z
     .array(z.object({ repairTypeId: idSchema, qualityId: idSchema }))

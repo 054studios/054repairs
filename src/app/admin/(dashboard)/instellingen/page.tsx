@@ -52,6 +52,7 @@ export default async function SettingsPage() {
     <div>
       <PageHeader title="Instellingen" description="Bedrijfsgegevens en de betaalkoppeling." />
 
+      <Notice tone="info" className="mb-6">De website staat {process.env.SITE_INDEXING_ENABLED === "true" ? "ingesteld voor indexering na publicatie" : "in teststand voor zoekmachines"}. E-mail is {process.env.RESEND_API_KEY && process.env.MAIL_FROM ? "geconfigureerd" : "nog niet geconfigureerd"}; herinneringen staan {process.env.REMINDERS_ENABLED === "true" ? "aan" : "uit"}. Controleer vóór de lancering ook prijzen, bedrijfsgegevens en voorwaarden.</Notice>
       <div className="grid max-w-3xl gap-4 lg:gap-6">
         <Card title="Bedrijfsgegevens" description="Deze gegevens staan op de website en in e-mails aan klanten.">
           <ActionForm action={saveBusinessSettings}>

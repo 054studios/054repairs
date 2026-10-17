@@ -1,5 +1,6 @@
 import "server-only";
 import { cache } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 
 // Public, non-sensitive settings from public_settings(). The start address is never included.
@@ -90,8 +91,11 @@ async function fetchAll<T>(load: (from: number, to: number) => PromiseLike<PageR
 const bySortOrder = <T extends { sortOrder: number; name: string }>(a: T, b: T) =>
   a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, "nl");
 
-// Returns null when the settings cannot be read, so pages can show a fallback text.
-export const getPublicSettings = cache(async (): Promise<PublicSettings | null> => {
+// Shared marketing cache; no session, start address or customer data is included.
+export const getPublicSettings = cache(async function publicSettings(): Promise<PublicSettings | null> {
+  "use cache";
+  cacheLife({ stale: 60, revalidate: 60, expire: 300 });
+  cacheTag("public-settings");
   try {
     const supabase = createPublicClient();
     const { data, error } = await supabase.rpc("public_settings");
@@ -107,8 +111,11 @@ export const getPublicSettings = cache(async (): Promise<PublicSettings | null> 
   }
 });
 
-// Returns null when the catalogue cannot be read. Inactive rows are hidden by RLS.
-export const getCatalogue = cache(async (): Promise<Catalogue | null> => {
+// Shared marketing cache. Booking reads uncached data; inactive rows are hidden by RLS.
+export const getCatalogue = cache(async function publicCatalogue(): Promise<Catalogue | null> {
+  "use cache";
+  cacheLife({ stale: 60, revalidate: 60, expire: 300 });
+  cacheTag("public-catalogue");
   try {
     const supabase = createPublicClient();
 

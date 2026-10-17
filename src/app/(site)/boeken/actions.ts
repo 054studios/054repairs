@@ -1,5 +1,6 @@
 "use server";
 
+import { recordMetric } from "@/lib/metrics";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { searchPdokAddresses } from "@/lib/booking/address";
@@ -260,6 +261,7 @@ export async function createBookingAction(input: BookingPayload): Promise<Result
         return failure(GENERIC_ERROR);
       }
 
+      await recordMetric("booking_failed");
       return failure(error.message, /tijdslot/i.test(error.message) ? "slot_taken" : undefined);
     }
 
@@ -271,6 +273,7 @@ export async function createBookingAction(input: BookingPayload): Promise<Result
 
     const { reference, token, startsAt, totalCents, depositCents } = booking.data;
     const statusPath = bookingStatusPath(reference, token);
+    await recordMetric("booking_created");
 
     if (siteUrl) {
       try {
@@ -282,9 +285,10 @@ export async function createBookingAction(input: BookingPayload): Promise<Result
           redirectUrl: `${siteUrl}${statusPath}`,
         });
         target = payment.checkoutUrl;
-      } catch (paymentError) {
+      } catch {
         // The booking is kept. The status page offers a new payment link.
-        console.error(paymentError);
+        console.error("Betaallink maken mislukt");
+        await recordMetric("payment_failed");
         target = `${statusPath}&betaling=mislukt`;
       }
     } else {
@@ -303,6 +307,7 @@ export async function createBookingAction(input: BookingPayload): Promise<Result
       paymentPending: paymentReady,
     });
   } catch (error) {
+    await recordMetric("booking_failed");
     return errorResult(error);
   }
 

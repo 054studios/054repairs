@@ -1,14 +1,11 @@
-import type { Metadata } from "next";
+import { pageMetadata } from "@/components/site/seo";
 import { getPublicSettings } from "@/components/site/data";
 import { LegalList, LegalPage, todo } from "@/components/site/legal";
 
 // The business name and contact details come from the database on each request.
 export const instant = false;
 
-export const metadata: Metadata = {
-  title: "Privacyverklaring",
-  description: "Welke persoonsgegevens we verwerken, waarom, hoe lang en welke rechten je hebt.",
-};
+export const metadata = pageMetadata("Privacyverklaring", "Lees welke gegevens 054repairs verwerkt voor je boeking en reparatie en hoe je contact opneemt over je privacy.", "/privacy");
 
 export default async function PrivacyPage() {
   const settings = await getPublicSettings();
@@ -94,8 +91,13 @@ export default async function PrivacyPage() {
           ),
         },
         {
+          id: "metingen",
+          title: "7. Boekingsmetingen en herinneringen",
+          content: <p>Als boekingsmetingen zijn ingeschakeld, tellen we per dag hoe vaak een stap is bekeken en hoeveel boekingen en betalingen zijn verwerkt. Deze tellingen bevatten geen naam, adres, IP-adres, bezoeker-ID of persoonlijke statuslink. Als herinneringsmails zijn ingeschakeld, gebruiken we je e-mailadres om je aan een bevestigde afspraak te herinneren.</p>,
+        },
+        {
           id: "rechten",
-          title: "7. Je rechten",
+          title: "8. Je rechten",
           content: (
             <p>
               {todo(
@@ -106,7 +108,7 @@ export default async function PrivacyPage() {
         },
         {
           id: "beveiliging",
-          title: "8. Beveiliging",
+          title: "9. Beveiliging",
           content: <p>Wij nemen passende technische en organisatorische maatregelen om je gegevens te beveiligen.</p>,
         },
       ]}

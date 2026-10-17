@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { safely, savedResult, type ActionResult } from "@/lib/action-result";
 import { parseEuroToCents } from "@/lib/money";
@@ -54,6 +54,7 @@ export async function savePaymentSettings(_prev: ActionResult | null, formData: 
 
     if (error) throw new Error("Opslaan is mislukt.");
 
+    updateTag("public-settings");
     revalidatePath(PATH);
     return savedResult;
   });

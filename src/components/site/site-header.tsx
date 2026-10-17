@@ -3,6 +3,8 @@ import { Wordmark } from "@/components/ui/wordmark";
 import { HeaderNav } from "./header-nav";
 
 export const siteLinks = [
+  { href: "/reparaties", label: "Reparaties" },
+  { href: "/werkgebied", label: "Werkgebied" },
   { href: "/prijzen", label: "Prijzen" },
   { href: "/hoe-het-werkt", label: "Hoe het werkt" },
   { href: "/faq", label: "Vragen" },

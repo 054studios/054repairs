@@ -1,4 +1,6 @@
-import type { Metadata } from "next";
+import Link from "next/link";
+import { slugify } from "@/lib/slug";
+import { pageMetadata } from "@/components/site/seo";
 import { getCatalogue, getPublicSettings, type Catalogue } from "@/components/site/data";
 import { pricedCatalogue } from "@/components/site/catalogue";
 import { travelSummary } from "@/components/site/facts";
@@ -9,11 +11,7 @@ import { h2Class } from "@/components/ui/styles";
 // Prices and settings are read from the database on each request.
 export const instant = false;
 
-export const metadata: Metadata = {
-  title: "Prijzen",
-  description:
-    "Bekijk de vaste prijs per iPhone-model, per reparatie en per kwaliteit, met de duur van de reparatie. Voorrijkosten alleen boven de gratis afstand.",
-};
+export const metadata = pageMetadata("iPhone-reparatie prijzen", "Bekijk de prijs en reparatieduur per iPhone-model. Kies je onderdeel en kwaliteit en boek een reparatie op locatie.", "/prijzen");
 
 export default async function PricesPage() {
   const [settings, catalogue] = await Promise.all([getPublicSettings(), getCatalogue()]);
@@ -46,6 +44,7 @@ export default async function PricesPage() {
           </div>
         </section>
 
+        {priced && <nav aria-label="Prijzen per iPhone-model"><h2 className={h2Class}>Alle modellen</h2><ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2">{priced.models.map(m => <li key={m.id}><Link href={`/iphone/${slugify(m.name)}`} className="inline-flex min-h-11 items-center text-cyan-300 underline">{m.name} reparatie</Link></li>)}</ul></nav>}
         {catalogue ? <Explained catalogue={catalogue} /> : null}
       </Container>
 

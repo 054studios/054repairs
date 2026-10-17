@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import { pageMetadata } from "@/components/site/seo";
 import Link from "next/link";
 import { EnvelopeSimple, Phone } from "@phosphor-icons/react/dist/ssr";
 import { getPublicSettings } from "@/components/site/data";
+import { whatsappHref } from "@/components/site/whatsapp";
 import { phoneHref } from "@/components/site/facts";
 import { Container, Notice, PageHeader } from "@/components/site/ui";
 import { buttonClass, h3Class } from "@/components/ui/styles";
@@ -9,16 +10,14 @@ import { buttonClass, h3Class } from "@/components/ui/styles";
 // Contact details come from the database on each request.
 export const instant = false;
 
-export const metadata: Metadata = {
-  title: "Contact",
-  description: "Bel of mail ons met een vraag over je iPhone of je boeking. Een reparatie boeken gaat het snelst online.",
-};
+export const metadata = pageMetadata("Contact voor iPhone-reparatie aan huis", "Bel of mail 054repairs over je iPhone-reparatie op locatie. Bekijk ons werkgebied en boek online.", "/contact");
 
 const rowClass =
   "group flex min-h-20 items-center gap-4 px-5 py-4 transition-colors duration-150 hover:bg-ink-850 sm:px-6";
 
 export default async function ContactPage() {
   const settings = await getPublicSettings();
+  const whatsapp = whatsappHref();
   const hasContact = Boolean(settings?.phone || settings?.email);
 
   return (
@@ -73,6 +72,8 @@ export default async function ContactPage() {
             <Notice>Onze contactgegevens volgen binnenkort. Boeken kan al wel online.</Notice>
           )}
 
+          {whatsapp && <a href={whatsapp} className={`${buttonClass("secondary", "md")} mt-6`}>Stuur een WhatsApp-bericht</a>}
+          <p className="mt-6 text-steel-400">Wil je weten of we bij jou komen? <Link href="/werkgebied" className="inline-flex min-h-11 items-center text-cyan-300 underline">Controleer je adres</Link>.</p>
           <div className="mt-8 max-w-[56ch]">
             <h3 className={h3Class}>Deel je pincode niet</h3>
             <p className="mt-2 leading-relaxed text-steel-400">

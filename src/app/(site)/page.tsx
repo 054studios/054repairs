@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { pageMetadata } from "@/components/site/seo";
+import { repairPages } from "@/components/site/repair-content";
+export const metadata = pageMetadata("iPhone-reparatie aan huis in regio Amsterdam", "Laat je iPhone op locatie repareren door 054repairs. Bekijk prijzen voor scherm, batterij en laadpoort en controleer de voorrijkosten.", "/");
 import type { CSSProperties } from "react";
 import { getCatalogue, getPublicSettings, type PublicSettings } from "@/components/site/data";
 import {
@@ -34,6 +37,7 @@ export default async function HomePage() {
   return (
     <>
       <Hero priced={priced} settings={settings} />
+      <Container className="py-8"><nav aria-label="Kies je reparatie" className="flex flex-wrap gap-x-6 gap-y-2">{repairPages.map(r => <Link key={r.slug} href={`/reparaties/${r.slug}`} className="inline-flex min-h-11 items-center text-cyan-300 underline underline-offset-4">{r.title}</Link>)}<Link href="/werkgebied" className="inline-flex min-h-11 items-center text-cyan-300 underline underline-offset-4">Check je postcode →</Link></nav></Container>
       <RouteSection priced={priced} settings={settings} />
       <TravelSection settings={settings} />
       <PricePreview table={priced ? fromPriceTable(priced) : null} />

@@ -21,6 +21,7 @@ const navItems: { href: string; label: string; icon: Icon }[] = [
   { href: "/admin/voorrijkosten", label: "Voorrijkosten", icon: PathIcon },
   { href: "/admin/planning", label: "Planning", icon: ClockIcon },
   { href: "/admin/betalingen", label: "Betalingen", icon: CreditCardIcon },
+  { href: "/admin/inzichten", label: "Inzichten", icon: HouseIcon },
   { href: "/admin/instellingen", label: "Instellingen", icon: GearSixIcon },
 ];
 

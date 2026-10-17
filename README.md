@@ -143,3 +143,7 @@ Let op: de Mollie-koppeling, de webhook en de e-mails zijn gebouwd maar **nog ni
 | `APP_ENCRYPTION_KEY` | later | Versleutelt de Mollie-key. 32+ tekens |
 | `RESEND_API_KEY` | later | Bevestigingsmails |
 | `MAIL_FROM` | later | Afzender van de mails |
+
+## SEO en boekingsupgrades (17 oktober 2026)
+
+Zie [activering en lancering](docs/launch-upgrades.md) voor de nieuwe pagina’s, indexering, database-migratie, metingen en herinneringsmails. Nieuwe integraties staan standaard uit totdat ze zijn ingesteld.

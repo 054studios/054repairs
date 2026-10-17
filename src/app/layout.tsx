@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Inter_Tight } from "next/font/google";
 import { siteUrl } from "@/components/site/site-url";
+import { indexingEnabled } from "@/components/site/seo";
 import "./globals.css";
 
 // Headlines. Variable font, so one file covers every weight we use.
@@ -20,6 +21,7 @@ const interTight = Inter_Tight({
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
+  robots: { index: indexingEnabled(), follow: true },
   title: "054repairs | iPhone-reparatie aan huis",
   description:
     "Boek online een iPhone-reparatie. Wij rijden naar je toe, repareren ter plekke in de bus en je hebt je telefoon terug zodra de reparatie klaar is.",

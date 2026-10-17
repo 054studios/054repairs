@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { createMollieClient } from "@mollie/api-client";
 import { requireAdmin } from "@/lib/auth";
 import { safely, savedResult, type ActionResult } from "@/lib/action-result";
@@ -32,6 +32,7 @@ export async function saveBusinessSettings(_prev: ActionResult | null, formData:
 
     if (error) throw new Error("Opslaan is mislukt.");
 
+    updateTag("public-settings");
     revalidatePath(PATH);
     return savedResult;
   });
@@ -73,6 +74,7 @@ export async function saveMollieKey(_prev: ActionResult | null, formData: FormDa
 
     if (settingsError) throw new Error("De modus kon niet worden bijgewerkt.");
 
+    updateTag("public-settings");
     revalidatePath(PATH);
     return { ok: true, message: `Mollie-key opgeslagen (${mode === "live" ? "live" : "test"}-modus).` };
   });

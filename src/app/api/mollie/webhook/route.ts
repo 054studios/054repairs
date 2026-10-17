@@ -1,3 +1,4 @@
+import { recordMetric } from "@/lib/metrics";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { addPaymentToAppointment } from "@/lib/payments/ledger";
 import { getMollieClient, isMollieConfigured } from "@/lib/payments/mollie";
@@ -98,6 +99,7 @@ async function applyMollieStatus(
       throw error;
     }
 
+    if (["failed", "expired", "canceled"].includes(mollieStatus) && row.status !== LOCAL_STATUS[mollieStatus]) await recordMetric("payment_failed");
     return;
   }
 
@@ -120,6 +122,7 @@ async function applyMollieStatus(
 
   try {
     await addPaymentToAppointment(admin, row.appointment_id, row.amount_cents, row.kind === "balance" ? "mollie" : null);
+    await recordMetric("payment_paid");
   } catch (cause) {
     // Undo the claim, so the retry from Mollie can apply the amount.
     await admin.from("payments").update({ status: row.status, paid_at: null }).eq("id", row.id).eq("status", "paid");

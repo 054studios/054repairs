@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { safely, savedResult, type ActionResult } from "@/lib/action-result";
 import { parseEuroToCents } from "@/lib/money";
@@ -52,6 +52,7 @@ export async function createModel(_prev: ActionResult | null, formData: FormData
 
     if (error) throw new Error("Dit model bestaat al of kon niet worden opgeslagen.");
 
+    updateTag("public-catalogue");
     revalidatePath(PATH);
     return savedResult;
   });
@@ -72,6 +73,7 @@ export async function updateModel(id: string, _prev: ActionResult | null, formDa
 
     if (error) throw new Error("Opslaan is mislukt.");
 
+    updateTag("public-catalogue");
     revalidatePath(PATH);
     return savedResult;
   });
@@ -91,6 +93,7 @@ export async function createRepairType(_prev: ActionResult | null, formData: For
 
     if (error) throw new Error("Opslaan is mislukt.");
 
+    updateTag("public-catalogue");
     revalidatePath(PATH);
     return savedResult;
   });
@@ -113,6 +116,7 @@ export async function updateRepairType(id: string, _prev: ActionResult | null, f
 
     if (error) throw new Error("Opslaan is mislukt.");
 
+    updateTag("public-catalogue");
     revalidatePath(PATH);
     return savedResult;
   });
@@ -131,6 +135,7 @@ export async function createQuality(_prev: ActionResult | null, formData: FormDa
 
     if (error) throw new Error("Opslaan is mislukt.");
 
+    updateTag("public-catalogue");
     revalidatePath(PATH);
     return savedResult;
   });
@@ -152,6 +157,7 @@ export async function updateQuality(id: string, _prev: ActionResult | null, form
 
     if (error) throw new Error("Opslaan is mislukt.");
 
+    updateTag("public-catalogue");
     revalidatePath(PATH);
     return savedResult;
   });
@@ -216,6 +222,7 @@ export async function savePrices(modelId: string, _prev: ActionResult | null, fo
       if (error) throw new Error("Opslaan van prijzen is mislukt.");
     }
 
+    updateTag("public-catalogue");
     revalidatePath(PATH);
     return savedResult;
   });

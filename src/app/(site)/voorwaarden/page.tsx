@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { pageMetadata } from "@/components/site/seo";
 import { getPublicSettings } from "@/components/site/data";
 import { refundText, travelSummary } from "@/components/site/facts";
 import { LegalPage, todo } from "@/components/site/legal";
@@ -6,10 +6,7 @@ import { LegalPage, todo } from "@/components/site/legal";
 // Business name, contact details and refund rules come from the database on each request.
 export const instant = false;
 
-export const metadata: Metadata = {
-  title: "Algemene voorwaarden",
-  description: "De algemene voorwaarden voor reparaties en boekingen.",
-};
+export const metadata = pageMetadata("Algemene voorwaarden", "Bekijk de voorwaarden voor het boeken en uitvoeren van een iPhone-reparatie bij 054repairs.", "/voorwaarden");
 
 export default async function TermsPage() {
   const settings = await getPublicSettings();

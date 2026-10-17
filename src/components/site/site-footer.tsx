@@ -33,7 +33,7 @@ export async function SiteFooter({ settings }: { settings: PublicSettings | null
             Pagina&apos;s
           </h2>
           <ul className="mt-2">
-            {siteLinks.map((link) => (
+            {[...siteLinks, { href: "/over-ons", label: "Over ons" }].map((link) => (
               <li key={link.href}>
                 <Link href={link.href} className={footerLink}>
                   {link.label}

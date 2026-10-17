@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { indexingEnabled } from "@/components/site/seo";
 import { siteUrl } from "@/components/site/site-url";
 
 export default function robots(): MetadataRoute.Robots {
@@ -8,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/admin"],
     },
-    sitemap: `${siteUrl()}/sitemap.xml`,
+    ...(indexingEnabled() ? { sitemap: `${siteUrl()}/sitemap.xml` } : {}),
   };
 }

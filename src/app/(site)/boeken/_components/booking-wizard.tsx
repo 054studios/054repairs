@@ -2,7 +2,8 @@
 
 import { ArrowLeftIcon, WarningCircleIcon } from "@phosphor-icons/react";
 import { AnimatePresence, MotionConfig, motion, useReducedMotion, type Variants } from "motion/react";
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { trackBookingStep } from "@/lib/funnel-client";
 import { RouteProgress } from "@/components/ui/route";
 import { formatDuration } from "@/lib/booking/format";
 import { depositCentsFor } from "@/lib/booking/pricing";
@@ -152,6 +153,11 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
   const navigated = useRef(false);
 
   const { step } = state;
+  const [website, setWebsite] = useState("");
+  const seenSteps = useRef(new Set<number>());
+  useEffect(() => {
+    if (!seenSteps.current.has(step)) { seenSteps.current.add(step); trackBookingStep(step); }
+  }, [step]);
   const optionsNow = state.modelId !== null && state.optionsFor === state.modelId ? state.options : [];
   const offeredRepairs = repairTypes.filter((repair) => optionsNow.some((option) => option.repairTypeId === repair.id));
   const qualityRank = new Map(qualities.map((quality, index) => [quality.id, index]));
@@ -418,6 +424,7 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
     setError(null);
 
     const payload: BookingPayload = {
+      website,
       modelId,
       items: chosen.map((option) => ({ repairTypeId: option.repairTypeId, qualityId: option.qualityId })),
       address: {
@@ -587,6 +594,7 @@ export function BookingWizard({ catalog, preset = null }: { catalog: BookingCata
   return (
     <MotionConfig reducedMotion="user">
       <div ref={topRef} className="flex flex-col">
+        <div aria-hidden="true" className="absolute -left-[10000px] top-0"><label htmlFor="booking-website">Website<input id="booking-website" name="website" value={website} onChange={e => setWebsite(e.target.value)} tabIndex={-1} autoComplete="off" /></label></div>
         <div className="mb-7 flex items-center gap-4 sm:mb-9">
           <div className="min-w-0 flex-1">
             <RouteProgress
