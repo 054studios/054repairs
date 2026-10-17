@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { loadBookingCatalog, loadModelOptions } from "@/lib/booking/catalog";
 import { idSchema } from "@/lib/booking/schema";
-import { buttonClass, skeletonClass, stepPanelClass } from "@/lib/booking/styles";
+import { BookingSkeleton } from "@/components/site/loading-skeletons";
+import { buttonClass, stepPanelClass } from "@/lib/booking/styles";
 import type { BookingCatalog } from "@/lib/booking/types";
 import { createClient } from "@/lib/supabase/server";
 import { BookingWizard, type WizardPreset } from "./_components/booking-wizard";
@@ -17,7 +18,11 @@ export const metadata: Metadata = {
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-export default function BoekenPage({ searchParams }: { searchParams: SearchParams }) {
+export default function BoekenPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   return (
     <div className="mx-auto w-full max-w-[40rem] px-4 pb-10 pt-6 md:pb-20 md:pt-12">
       <Suspense fallback={<BookingSkeleton />}>
@@ -34,7 +39,10 @@ function single(value: string | string[] | undefined): string | null {
 
 // Preselect from the home price check: /boeken?model=<id>&repair=<id>&quality=<id>.
 // Anything that does not match the catalogue is ignored without a message.
-async function readPreset(searchParams: SearchParams, catalog: BookingCatalog): Promise<WizardPreset | null> {
+async function readPreset(
+  searchParams: SearchParams,
+  catalog: BookingCatalog,
+): Promise<WizardPreset | null> {
   const query = await searchParams;
   const modelId = single(query.model);
 
@@ -42,7 +50,9 @@ async function readPreset(searchParams: SearchParams, catalog: BookingCatalog): 
     return null;
   }
 
-  const options = await loadModelOptions(await createClient(), modelId).catch(() => null);
+  const options = await loadModelOptions(await createClient(), modelId).catch(
+    () => null,
+  );
 
   if (!options) {
     return { modelId, options: null, selections: {} };
@@ -52,12 +62,21 @@ async function readPreset(searchParams: SearchParams, catalog: BookingCatalog): 
   const qualityId = single(query.quality);
   const selections: Record<string, string> = {};
 
-  if (repairId && catalog.repairTypes.some((repair) => repair.id === repairId)) {
-    const forRepair = options.filter((option) => option.repairTypeId === repairId);
+  if (
+    repairId &&
+    catalog.repairTypes.some((repair) => repair.id === repairId)
+  ) {
+    const forRepair = options.filter(
+      (option) => option.repairTypeId === repairId,
+    );
     const exact = forRepair.find((option) => option.qualityId === qualityId);
     // Without a valid quality, start with the first quality in catalogue order, as the wizard does.
-    const rank = new Map(catalog.qualities.map((quality, index) => [quality.id, index]));
-    const fallback = [...forRepair].sort((a, b) => (rank.get(a.qualityId) ?? 0) - (rank.get(b.qualityId) ?? 0))[0];
+    const rank = new Map(
+      catalog.qualities.map((quality, index) => [quality.id, index]),
+    );
+    const fallback = [...forRepair].sort(
+      (a, b) => (rank.get(a.qualityId) ?? 0) - (rank.get(b.qualityId) ?? 0),
+    )[0];
     const pick = exact ?? fallback;
 
     if (pick) {
@@ -78,9 +97,14 @@ async function BookingLoader({ searchParams }: { searchParams: SearchParams }) {
           Boeken lukt op dit moment niet
         </h1>
         <p className="mt-3 text-base leading-relaxed text-steel-400">
-          Wij kunnen de toestellen en prijzen nu niet laden. Probeer het over een paar minuten opnieuw.
+          Wij kunnen de toestellen en prijzen nu niet laden. Probeer het over
+          een paar minuten opnieuw.
         </p>
-        <Link href="/boeken" prefetch={false} className={`${buttonClass("secondary", "md")} mt-5`}>
+        <Link
+          href="/boeken"
+          prefetch={false}
+          className={`${buttonClass("secondary", "md")} mt-5`}
+        >
           Probeer opnieuw
         </Link>
       </section>
@@ -90,25 +114,4 @@ async function BookingLoader({ searchParams }: { searchParams: SearchParams }) {
   const preset = await readPreset(searchParams, catalog);
 
   return <BookingWizard catalog={catalog} preset={preset} />;
-}
-
-function BookingSkeleton() {
-  return (
-    <div aria-busy="true" aria-live="polite">
-      <span className="sr-only">Boeken laden</span>
-      <div className="mb-9 flex items-center gap-4">
-        <div className={`${skeletonClass} h-1 flex-1 rounded-full`} />
-        <div className={`${skeletonClass} h-4 w-12`} />
-      </div>
-      <div className={`${skeletonClass} h-9 w-3/4`} />
-      <div className={`${skeletonClass} mt-3 h-5 w-2/3`} />
-      <div className={`${stepPanelClass} mt-6`}>
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-          {Array.from({ length: 6 }, (_, index) => (
-            <div key={index} className={`${skeletonClass} h-[5.5rem]`} />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
 }

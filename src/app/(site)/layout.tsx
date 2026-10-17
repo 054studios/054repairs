@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { FooterSkeleton } from "@/components/site/loading-skeletons";
 import { getPublicSettings } from "@/components/site/data";
 import { SiteFooter } from "@/components/site/site-footer";
 import { BusinessSchema } from "@/components/site/structured-data";
@@ -16,9 +18,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  const settings = await getPublicSettings();
-
+export default function SiteLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <div className="flex min-h-dvh flex-col bg-ink-950">
       <a
@@ -28,12 +32,30 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         Direct naar de inhoud
       </a>
       <SiteHeader />
-      <BusinessSchema settings={settings} />
       <main id="inhoud" className="flex-1">
         {children}
       </main>
+      <Suspense
+        fallback={
+          <>
+            <FooterSkeleton />
+            <MobileContact phone={null} />
+          </>
+        }
+      >
+        <SiteDetails />
+      </Suspense>
+    </div>
+  );
+}
+
+async function SiteDetails() {
+  const settings = await getPublicSettings();
+  return (
+    <>
+      <BusinessSchema settings={settings} />
       <SiteFooter settings={settings} />
       <MobileContact phone={settings?.phone ?? null} />
-    </div>
+    </>
   );
 }

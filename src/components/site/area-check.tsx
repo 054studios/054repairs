@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { searchAddress, calculateTravel } from "@/app/(site)/boeken/actions";
 import type { AddressSuggestion, TravelQuote } from "@/lib/booking/types";
 import { buttonClass, inputClass, labelClass } from "@/components/ui/styles";
+import { LoadingState, Skeleton, Spinner } from "@/components/ui/skeleton";
 import { formatEuro } from "@/lib/money";
 
 export function AreaCheck() {
@@ -79,12 +80,16 @@ export function AreaCheck() {
             className={inputClass}
           />
           <button disabled={pending} className={buttonClass("primary", "md")}>
+            {pending && <Spinner />}
             {pending ? "Even geduld…" : "Check adres"}
           </button>
         </div>
       </form>
       {results.length > 0 && (
-        <ul aria-label="Kies je adres" className="mt-4 divide-y divide-line">
+        <ul
+          aria-label="Kies je adres"
+          className="content-arrive mt-4 divide-y divide-line"
+        >
           {results.map((a) => (
             <li key={a.label}>
               <button
@@ -98,10 +103,20 @@ export function AreaCheck() {
           ))}
         </ul>
       )}
+      {pending && (
+        <LoadingState
+          label={chosen ? "Voorrijkosten berekenen" : "Adressen zoeken"}
+          className="mt-4 min-h-28 rounded-ui bg-ink-850 p-4"
+        >
+          <Skeleton className="h-5 w-3/4" />
+          <Skeleton className="mt-3 h-5 w-1/2" />
+          <Skeleton className="mt-3 h-4 w-2/3" />
+        </LoadingState>
+      )}
       <div aria-live="polite" className="mt-4">
         {chosen && <p className="text-steel-300">{chosen.label}</p>}
         {quote && (
-          <>
+          <div className="content-arrive">
             <p className="mt-3 font-semibold">
               {quote.withinArea
                 ? `Wij komen naar je toe. Voorrijkosten: ${formatEuro(quote.feeCents)}.`
@@ -121,7 +136,7 @@ export function AreaCheck() {
                 Kies je reparatie
               </Link>
             )}
-          </>
+          </div>
         )}
         {error && (
           <p role="alert" className="text-bad">

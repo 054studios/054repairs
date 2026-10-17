@@ -78,7 +78,7 @@ export function ModelPrices({ catalogue }: { catalogue: PricedCatalogue }) {
               </th>
             </tr>
           </thead>
-          <tbody key={modelId} className="figure-swap divide-y divide-line">
+          <tbody key={modelId} className="table-arrive divide-y divide-line">
             {rows.map((row) => (
               <tr key={row.repair.id}>
                 <th scope="row" className="px-4 py-3 align-middle font-medium text-steel-100 sm:px-6">

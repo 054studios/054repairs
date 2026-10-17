@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { RepairCardsSkeleton } from "@/components/site/loading-skeletons";
 import { notFound } from "next/navigation";
 import { getCatalogue } from "@/components/site/data";
 import { repairPages, repairPage } from "@/components/site/repair-content";
@@ -23,7 +25,6 @@ export async function generateMetadata({ params }: Props) {
 export default async function RepairPage({ params }: Props) {
   const repair = repairPage((await params).slug);
   if (!repair) notFound();
-  const catalogue = await getCatalogue();
   return (
     <>
       <PageHeader title={repair.title} lead={repair.intro} />
@@ -64,7 +65,9 @@ export default async function RepairPage({ params }: Props) {
             </Link>{" "}
             voor een indicatie.
           </p>
-          <RepairPriceList catalogue={catalogue} match={repair.match} />
+          <Suspense fallback={<RepairCardsSkeleton />}>
+            <RepairPrices match={repair.match} />
+          </Suspense>
         </section>
         <section className="max-w-[65ch]">
           <h2 className={h2Class}>Voor je afspraak</h2>
@@ -100,4 +103,8 @@ export default async function RepairPage({ params }: Props) {
       <ClosingCta title="Kies je reparatie. Wij komen naar je toe." />
     </>
   );
+}
+
+async function RepairPrices({ match }: { match: string }) {
+  return <RepairPriceList catalogue={await getCatalogue()} match={match} />;
 }

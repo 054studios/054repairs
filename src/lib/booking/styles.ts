@@ -37,8 +37,8 @@ export function choiceClass(selected: boolean) {
   );
 }
 
-// Loading placeholder. animate-pulse only changes opacity; reduced motion stops it globally.
-export const skeletonClass = "animate-pulse rounded-ui bg-ink-800";
+// Shared loading shimmer; reduced motion shows static placeholders.
+export const skeletonClass = "skeleton rounded-ui";
 
 // Inline field error under an input.
 export const fieldErrorClass = "mt-2 flex items-start gap-1.5 text-sm leading-snug text-bad";

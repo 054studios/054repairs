@@ -486,3 +486,35 @@ details > summary::-webkit-details-marker {
 .km-range:active::-moz-range-thumb {
   transform: scale(1.1);
 }
+
+/* Loading placeholders match the finished UI, without artificial waits. */
+.skeleton { position: relative; overflow: hidden; isolation: isolate; background: var(--color-ink-800); }
+.skeleton::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(105deg, transparent 20%, rgb(189 238 255 / 0.08) 48%, transparent 75%); opacity: 0; }
+.hover-lift { transition: transform 180ms var(--ease-out-strong); }
+@media (prefers-reduced-motion: no-preference) {
+  .skeleton::after { opacity: 1; animation: skeleton-sweep 1500ms linear infinite; }
+  .loading-spinner { animation: loading-spin 650ms linear infinite; }
+  .page-enter { animation: page-arrive 220ms var(--ease-out-strong); }
+  .content-arrive { animation: content-arrive 240ms var(--ease-out-strong); }
+  .table-arrive { animation: page-arrive 180ms var(--ease-out-strong); }
+}
+@keyframes skeleton-sweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+@keyframes loading-spin { to { transform: rotate(360deg); } }
+@keyframes page-arrive { from { opacity: .78; } to { opacity: 1; } }
+@keyframes content-arrive { from { opacity: .65; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+/* Progressive enhancement: older browsers keep all content visible. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal-on-scroll { animation: section-arrive linear both; animation-timeline: view(); animation-range: entry 0% entry 70%; }
+  }
+}
+@keyframes section-arrive { from { opacity: .65; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .hover-lift:hover { transform: translateY(-3px); }
+}
+/* Keyboard navigation stays immediate. */
+html:has(:focus-visible) :is(.page-enter, .table-arrive, .figure-swap) { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after { opacity: 0; animation: none !important; }
+  .loading-spinner, .page-enter, .content-arrive, .table-arrive, .reveal-on-scroll { animation: none !important; transform: none; }
+}

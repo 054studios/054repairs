@@ -44,7 +44,7 @@ export function RepairPriceList({
         .map((model) => (
           <section
             key={model.id}
-            className="rounded-panel bg-ink-900 p-5 ring-1 ring-line"
+            className="hover-lift rounded-panel bg-ink-900 p-5 ring-1 ring-line"
           >
             <h3 className="text-xl font-semibold">
               <Link

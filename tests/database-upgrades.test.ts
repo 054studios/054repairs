@@ -187,7 +187,7 @@ test("service role can persist delivery acknowledgements without public write ac
   await db.exec("set role service_role");
   try {
     await db.exec("update public.appointment_reminders set sent_at = now()");
-    const { rows } = await db.query("select sent_at from public.appointment_reminders");
+    const { rows } = await db.query<{ sent_at: string | null }>("select sent_at from public.appointment_reminders");
     assert.ok(rows[0].sent_at);
   } finally { await db.exec("reset role"); }
 });

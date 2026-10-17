@@ -14,7 +14,7 @@ export function PageHeader({ title, lead, children }: { title: string; lead?: Re
     <div className="night-sky">
       <Container className="pb-12 pt-12 md:pb-16 md:pt-20">
         <h1 className={`${displayClass} max-w-[18ch] text-[clamp(2.25rem,5vw,3.75rem)] leading-[1.04]`}>{title}</h1>
-        {lead ? <p className={`mt-5 max-w-[56ch] ${leadClass}`}>{lead}</p> : null}
+        {lead ? <p className={`content-arrive mt-5 max-w-[56ch] ${leadClass}`}>{lead}</p> : null}
         {children}
       </Container>
     </div>
@@ -33,7 +33,7 @@ export function ClosingCta({ title, children }: { title: string; children?: Reac
   return (
     <section aria-labelledby="afsluiting-titel" className="pb-20 md:pb-28">
       <Container>
-        <div className="relative overflow-hidden rounded-hero bg-ink-900 px-6 py-12 shadow-panel ring-1 ring-line sm:px-10 md:px-14 md:py-16">
+        <div className="reveal-on-scroll relative overflow-hidden rounded-hero bg-ink-900 px-6 py-12 shadow-panel ring-1 ring-line sm:px-10 md:px-14 md:py-16">
           <RouteEnd />
           <div className="relative max-w-[34rem]">
             <h2 id="afsluiting-titel" className={h2Class}>

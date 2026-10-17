@@ -18,7 +18,7 @@ export default function RepairsPage() {
         {repairPages.map((repair) => (
           <article
             key={repair.slug}
-            className="rounded-panel bg-ink-900 p-6 ring-1 ring-line"
+            className="hover-lift rounded-panel bg-ink-900 p-6 ring-1 ring-line"
           >
             <h2 className="text-2xl font-semibold">{repair.title}</h2>
             <p className="mt-4 leading-relaxed text-steel-400">
