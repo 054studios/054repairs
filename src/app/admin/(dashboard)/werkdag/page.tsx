@@ -1,11 +1,18 @@
 import Link from "next/link";
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  CalendarBlankIcon,
+  PhoneIcon,
+  NavigationArrowIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import { requireAdmin } from "@/lib/auth";
 import { PageHeader } from "@/components/admin/page-header";
 import { Card, inputClass } from "@/components/admin/fields";
 import { OperationsNotice } from "@/components/admin/operations-notice";
-import { buttonClass, textLinkClass } from "@/components/ui/styles";
+import { buttonClass } from "@/components/ui/styles";
 import { estimatedMinutes } from "@/lib/operations";
-import { amsterdamDay, formatClock } from "@/lib/booking/format";
+import { addDays, amsterdamDay, formatClock } from "@/lib/booking/format";
 import { amsterdamLocalToIso } from "@/lib/time";
 import { STATUS_LABEL } from "../afspraken/shared";
 export const metadata = { title: "Werkdag | 054repairs admin" };
@@ -54,19 +61,47 @@ export default async function Page({
         title="Je werkdag"
         description="Afspraken op volgorde, bereikbaarheid en de geschatte reistijd ertussen."
       />
-      <form className="mb-5 flex flex-wrap items-end gap-3">
-        <label>
-          Datum
-          <input
-            className={inputClass}
-            type="date"
-            name="dag"
-            defaultValue={day}
-            required
-          />
-        </label>
-        <button className={buttonClass("secondary")}>Bekijken</button>
-      </form>
+      <div className="mb-5 rounded-panel bg-ink-900 p-3 ring-1 ring-line sm:p-4">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <Link
+            href={`/admin/werkdag?dag=${addDays(day, -1)}`}
+            aria-label="Vorige dag"
+            className={`${buttonClass("secondary")} size-12 px-0`}
+          >
+            <ArrowLeftIcon aria-hidden="true" className="size-5" />
+          </Link>
+          <Link
+            href="/admin/werkdag"
+            className={`${buttonClass(day === amsterdamDay(new Date()) ? "primary" : "ghost")} gap-2`}
+          >
+            <CalendarBlankIcon aria-hidden="true" className="size-5" />
+            Vandaag
+          </Link>
+          <Link
+            href={`/admin/werkdag?dag=${addDays(day, 1)}`}
+            aria-label="Volgende dag"
+            className={`${buttonClass("secondary")} size-12 px-0`}
+          >
+            <ArrowRightIcon aria-hidden="true" className="size-5" />
+          </Link>
+        </div>
+        <form className="flex items-end gap-2">
+          <label className="min-w-0 flex-1 text-sm font-medium text-steel-300">
+            Kies een datum
+            <input
+              key={day}
+              className={`${inputClass} mt-1.5 min-w-0`}
+              type="date"
+              name="dag"
+              defaultValue={day}
+              required
+            />
+          </label>
+          <button className={`${buttonClass("secondary")} px-4`}>
+            Bekijken
+          </button>
+        </form>
+      </div>
       {!o ? (
         <OperationsNotice />
       ) : (
@@ -140,21 +175,28 @@ export default async function Page({
                       ? "Betaald"
                       : "Er staat nog een bedrag open"}
                   </p>
-                  <div className="mt-4 flex flex-wrap gap-4">
+                  <div className="mt-4 grid grid-cols-2 gap-2">
                     <Link
-                      className={textLinkClass}
+                      className={`${buttonClass("secondary")} col-span-2 whitespace-normal text-center`}
                       href={"/admin/afspraken/" + a.id}
                     >
-                      {a.reference}
+                      Afspraak bekijken{" "}
+                      <span className="figures text-xs text-steel-400">
+                        {a.reference}
+                      </span>
                     </Link>
                     <a
-                      className={textLinkClass}
+                      className={`${buttonClass("secondary")} px-3`}
                       href={"tel:" + a.customer_phone.replace(/[^+\d]/g, "")}
                     >
+                      <PhoneIcon
+                        aria-hidden="true"
+                        className="size-5 shrink-0"
+                      />
                       Bel klant
                     </a>
                     <a
-                      className={textLinkClass}
+                      className={`${buttonClass("primary")} px-3`}
                       href={
                         "https://www.google.com/maps/search/?api=1&query=" +
                         encodeURIComponent(address)
@@ -162,6 +204,10 @@ export default async function Page({
                       target="_blank"
                       rel="noreferrer"
                     >
+                      <NavigationArrowIcon
+                        aria-hidden="true"
+                        className="size-5 shrink-0"
+                      />
                       Navigeren
                     </a>
                   </div>

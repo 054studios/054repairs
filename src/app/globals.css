@@ -535,3 +535,11 @@ html:has(:focus-visible) :is(.page-enter, .table-arrive, .figure-swap) { animati
 .document-page th:first-child, .document-page td:first-child { padding-left: 0; }
 .document-page th:last-child, .document-page td:last-child { padding-right: 0; }
 @media print { .document-page table { min-width: 0; } }
+
+/* Mobile admin: leave room for browser safe areas and the persistent navigation. */
+.admin-content { overflow-wrap: anywhere; }
+.admin-menu::backdrop { background: rgb(0 0 0 / .65); }
+@media (max-width: 1023px) {
+  .admin-content { scroll-margin-top: calc(6rem + env(safe-area-inset-top)); }
+  .admin-content :is(input, select, textarea, section[id]) { scroll-margin-top: calc(6rem + env(safe-area-inset-top)); scroll-margin-bottom: 7rem; }
+}

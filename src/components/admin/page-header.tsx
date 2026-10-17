@@ -27,16 +27,22 @@ export function PageHeader({
           {back.label}
         </Link>
       )}
-      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+      <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-start">
         <div className="min-w-0">
-          <h1 className="font-display text-[1.75rem] font-semibold leading-tight tracking-[-0.025em] text-steel-50 lg:text-[2rem]">
+          <h1 className="font-display text-[1.625rem] font-semibold sm:text-[1.75rem] leading-tight tracking-[-0.025em] text-steel-50 lg:text-[2rem]">
             {title}
           </h1>
           {description && (
-            <p className="mt-1.5 max-w-[60ch] text-[0.95rem] leading-relaxed text-steel-400">{description}</p>
+            <p className="mt-1.5 max-w-[60ch] text-[0.95rem] leading-relaxed text-steel-400">
+              {description}
+            </p>
           )}
         </div>
-        {aside}
+        {aside && (
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            {aside}
+          </div>
+        )}
       </div>
       {children}
     </header>
