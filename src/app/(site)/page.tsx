@@ -1,5 +1,8 @@
 import { RealWork } from "@/components/site/real-work";
 import Link from "next/link";
+import Image from "next/image";
+import phoneRepair from "@/assets/landing/phone-repair.webp";
+import repairAtHome from "@/assets/landing/repair-at-home.webp";
 import { pageMetadata } from "@/components/site/seo";
 import { repairPages } from "@/components/site/repair-content";
 export const metadata = pageMetadata(
@@ -122,7 +125,7 @@ async function HomeSections() {
 function Hero() {
   return (
     <section aria-labelledby="hero-titel" className="night-sky">
-      <Container className="grid gap-7 pb-16 pt-7 sm:pt-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:items-center lg:gap-14 lg:pb-28 lg:pt-20">
+      <Container className="grid gap-7 pb-16 pt-7 sm:pt-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-x-14 lg:gap-y-8 lg:pb-28 lg:pt-20">
         <div>
           {/* No entrance animation on the headline: it is the largest paint and must show at once. */}
           <h1
@@ -141,11 +144,30 @@ function Hero() {
           </p>
         </div>
 
-        <div className="settle" style={stagger(2)}>
+        <div
+          className="settle lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center"
+          style={stagger(2)}
+        >
           <Suspense fallback={<PriceCheckSkeleton />}>
             <HomePriceCheck />
           </Suspense>
         </div>
+        <figure className="relative overflow-hidden rounded-panel bg-ink-900 ring-1 ring-line lg:col-start-1 lg:row-start-2">
+          <div className="relative aspect-[3/2] sm:aspect-[2/1] lg:aspect-[16/9]">
+            <Image
+              src={phoneRepair}
+              alt="Illustratie van een smartphone met een losgemaakt scherm en precisiegereedschap."
+              fill
+              sizes="(min-width: 1216px) 680px, (min-width: 1024px) calc(100vw - 33rem), (min-width: 640px) calc(100vw - 3rem), calc(100vw - 2rem)"
+              placeholder="blur"
+              loading="eager"
+              className="object-cover"
+            />
+          </div>
+          <figcaption className="absolute bottom-3 right-3 rounded-full border border-white/10 bg-ink-950/80 px-2.5 py-1 text-[0.6875rem] text-steel-300 backdrop-blur-sm">
+            Illustratie
+          </figcaption>
+        </figure>
       </Container>
     </section>
   );
@@ -237,36 +259,52 @@ function RouteSection({
 
 function TravelSection({ settings }: { settings: PublicSettings | null }) {
   const travel = settings ? travelSummary(settings) : null;
-
   return (
     <section
       aria-labelledby="voorrijkosten-titel"
       className="reveal-on-scroll py-16 md:py-24"
     >
-      <Container>
-        <div className="max-w-[58ch]">
+      <Container className="grid items-center gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-12">
+        <div className="min-w-0">
           <h2 id="voorrijkosten-titel" className={h2Class}>
             Voorrijkosten, vooraf duidelijk
           </h2>
-          <p className={`mt-4 ${leadClass}`}>
+          <p className={"mt-4 " + leadClass}>
             {travel
-              ? `${travel.free} ${travel.over} Schuif naar jouw afstand en zie wat het kost.`
+              ? travel.free +
+                " " +
+                travel.over +
+                " Schuif naar jouw afstand en zie wat het kost."
               : "De voorrijkosten hangen af van de afstand tot je adres. Je ziet het bedrag voordat je betaalt."}
           </p>
+          {settings ? (
+            <div className="mt-8">
+              <TravelFee
+                rule={{
+                  freeTravelKm: settings.freeTravelKm,
+                  pricePerKmCents: settings.pricePerKmCents,
+                  travelDistanceMode: settings.travelDistanceMode,
+                }}
+                maxTravelKm={settings.maxTravelKm}
+              />
+            </div>
+          ) : null}
         </div>
-
-        {settings ? (
-          <div className="mt-10 max-w-[52rem]">
-            <TravelFee
-              rule={{
-                freeTravelKm: settings.freeTravelKm,
-                pricePerKmCents: settings.pricePerKmCents,
-                travelDistanceMode: settings.travelDistanceMode,
-              }}
-              maxTravelKm={settings.maxTravelKm}
-            />
-          </div>
-        ) : null}
+        <figure className="min-w-0 overflow-hidden rounded-hero bg-ink-900 ring-1 ring-line">
+          <Image
+            src={repairAtHome}
+            alt="Illustratie van een gereedschapskoffer en smartphone bij de voordeur van een woning."
+            sizes="(min-width: 1216px) 480px, (min-width: 1024px) 42vw, (min-width: 640px) calc(100vw - 3rem), calc(100vw - 2rem)"
+            placeholder="blur"
+            className="aspect-[3/2] w-full object-cover lg:aspect-[4/5]"
+          />
+          <figcaption className="flex items-center justify-between gap-3 border-t border-line px-5 py-4">
+            <span className="text-sm font-medium text-steel-100">
+              Wij komen naar jou
+            </span>
+            <span className="text-xs text-steel-500">Illustratie</span>
+          </figcaption>
+        </figure>
       </Container>
     </section>
   );
